@@ -1,5 +1,7 @@
 package com.AutoRent.Backend.service;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.auto.AutoDto;
 import com.AutoRent.Backend.dto.auto.AutoRespuestaDto;
 import com.AutoRent.Backend.exception.DatoDuplicadoException;
@@ -17,21 +19,13 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AutoService {
 
     private final AutoRepository autoRepository;
     private final CategoriaAutoRepository categoriaAutoRepository;
     private final UsuarioService usuarioService;
 
-    public AutoService(
-            AutoRepository autoRepository,
-            CategoriaAutoRepository categoriaAutoRepository,
-            UsuarioService usuarioService
-    ) {
-        this.autoRepository = autoRepository;
-        this.categoriaAutoRepository = categoriaAutoRepository;
-        this.usuarioService = usuarioService;
-    }
 
     public AutoRespuestaDto crearAuto(Integer idPropietario, AutoDto dto) {
         Usuario propietario = usuarioService.obtenerUsuarioPorId(idPropietario);

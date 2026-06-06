@@ -1,8 +1,11 @@
 package com.AutoRent.Backend.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.perfilpropietario.PerfilPropietarioDto;
 import com.AutoRent.Backend.dto.perfilpropietario.PerfilPropietarioRespuestaDto;
 import com.AutoRent.Backend.service.PerfilPropietarioService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/propietarios")
+@Tag(name = "Propietarios")
+@RequiredArgsConstructor
 public class PerfilPropietarioController {
 
     private final PerfilPropietarioService perfilPropietarioService;
 
-    public PerfilPropietarioController(PerfilPropietarioService perfilPropietarioService) {
-        this.perfilPropietarioService = perfilPropietarioService;
-    }
 
     @PostMapping("/{idUsuario}")
     public ResponseEntity<PerfilPropietarioRespuestaDto> crearPerfil(

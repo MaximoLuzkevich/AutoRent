@@ -1,8 +1,11 @@
 package com.AutoRent.Backend.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.categoria.CategoriaAutoRespuestaDto;
 import com.AutoRent.Backend.model.enums.NombreCategoriaAuto;
 import com.AutoRent.Backend.service.CategoriaAutoService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,13 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/categorias")
+@Tag(name = "Categorias")
+@RequiredArgsConstructor
 public class CategoriaAutoController {
 
     private final CategoriaAutoService categoriaAutoService;
 
-    public CategoriaAutoController(CategoriaAutoService categoriaAutoService) {
-        this.categoriaAutoService = categoriaAutoService;
-    }
 
     @GetMapping
     public ResponseEntity<List<CategoriaAutoRespuestaDto>> listarCategorias() {

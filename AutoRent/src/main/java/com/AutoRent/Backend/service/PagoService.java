@@ -1,5 +1,7 @@
 package com.AutoRent.Backend.service;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.pago.PagoDto;
 import com.AutoRent.Backend.dto.pago.PagoRespuestaDto;
 import com.AutoRent.Backend.exception.IdNoEncontradoException;
@@ -13,15 +15,12 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class PagoService {
 
     private final PagoRepository pagoRepository;
     private final ReservaService reservaService;
 
-    public PagoService(PagoRepository pagoRepository, ReservaService reservaService) {
-        this.pagoRepository = pagoRepository;
-        this.reservaService = reservaService;
-    }
 
     public PagoRespuestaDto registrarPago(PagoDto dto) {
         Reserva reserva = reservaService.obtenerReservaPorId(dto.getIdReserva());

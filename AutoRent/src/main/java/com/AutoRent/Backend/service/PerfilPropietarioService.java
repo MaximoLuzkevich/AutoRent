@@ -1,5 +1,7 @@
 package com.AutoRent.Backend.service;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.perfilpropietario.PerfilPropietarioDto;
 import com.AutoRent.Backend.dto.perfilpropietario.PerfilPropietarioRespuestaDto;
 import com.AutoRent.Backend.exception.DatoDuplicadoException;
@@ -12,18 +14,12 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class PerfilPropietarioService {
 
     private final PerfilPropietarioRepository perfilPropietarioRepository;
     private final UsuarioService usuarioService;
 
-    public PerfilPropietarioService(
-            PerfilPropietarioRepository perfilPropietarioRepository,
-            UsuarioService usuarioService
-    ) {
-        this.perfilPropietarioRepository = perfilPropietarioRepository;
-        this.usuarioService = usuarioService;
-    }
 
     public PerfilPropietarioRespuestaDto crearPerfil(Integer idUsuario, PerfilPropietarioDto dto) {
         if (perfilPropietarioRepository.existsById(idUsuario)) {

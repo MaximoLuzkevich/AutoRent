@@ -1,5 +1,7 @@
 package com.AutoRent.Backend.service;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.review.ReviewDto;
 import com.AutoRent.Backend.dto.review.ReviewRespuestaDto;
 import com.AutoRent.Backend.exception.DatoDuplicadoException;
@@ -13,21 +15,13 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final AutoRepository autoRepository;
     private final UsuarioService usuarioService;
 
-    public ReviewService(
-            ReviewRepository reviewRepository,
-            AutoRepository autoRepository,
-            UsuarioService usuarioService
-    ) {
-        this.reviewRepository = reviewRepository;
-        this.autoRepository = autoRepository;
-        this.usuarioService = usuarioService;
-    }
 
     public ReviewRespuestaDto crearReview(Integer idCliente, ReviewDto dto) {
         if (reviewRepository.existsByClienteIdUsuarioAndAutoIdAuto(idCliente, dto.getIdAuto())) {

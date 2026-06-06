@@ -1,5 +1,7 @@
 package com.AutoRent.Backend.service;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.exception.IdNoEncontradoException;
 import com.AutoRent.Backend.model.Rol;
 import com.AutoRent.Backend.model.enums.NombreRol;
@@ -8,13 +10,11 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class RolService {
 
     private final RolRepository rolRepository;
 
-    public RolService(RolRepository rolRepository) {
-        this.rolRepository = rolRepository;
-    }
 
     public List<Rol> listarRoles() {
         return rolRepository.findAll();

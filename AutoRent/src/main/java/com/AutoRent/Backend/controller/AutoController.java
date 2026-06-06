@@ -1,9 +1,12 @@
 package com.AutoRent.Backend.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.auto.AutoDto;
 import com.AutoRent.Backend.dto.auto.AutoRespuestaDto;
 import com.AutoRent.Backend.model.enums.NombreCategoriaAuto;
 import com.AutoRent.Backend.service.AutoService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -18,13 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/autos")
+@Tag(name = "Autos")
+@RequiredArgsConstructor
 public class AutoController {
 
     private final AutoService autoService;
 
-    public AutoController(AutoService autoService) {
-        this.autoService = autoService;
-    }
 
     @PostMapping("/propietario/{idPropietario}")
     public ResponseEntity<AutoRespuestaDto> crearAuto(

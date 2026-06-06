@@ -1,10 +1,13 @@
 package com.AutoRent.Backend.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.usuario.LoginDto;
 import com.AutoRent.Backend.dto.usuario.RegistroUsuarioDto;
 import com.AutoRent.Backend.dto.usuario.UsuarioRespuestaDto;
 import com.AutoRent.Backend.model.enums.NombreRol;
 import com.AutoRent.Backend.service.UsuarioService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -19,13 +22,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/usuarios")
+@Tag(name = "Usuarios")
+@RequiredArgsConstructor
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    public UsuarioController(UsuarioService usuarioService) {
-        this.usuarioService = usuarioService;
-    }
 
     @PostMapping("/registro")
     public ResponseEntity<UsuarioRespuestaDto> registrarUsuario(@Valid @RequestBody RegistroUsuarioDto dto) {

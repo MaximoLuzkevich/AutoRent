@@ -1,5 +1,7 @@
 package com.AutoRent.Backend.service;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.imagenauto.ImagenAutoDto;
 import com.AutoRent.Backend.dto.imagenauto.ImagenAutoRespuestaDto;
 import com.AutoRent.Backend.exception.IdNoEncontradoException;
@@ -10,15 +12,12 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ImagenAutoService {
 
     private final ImagenAutoRepository imagenAutoRepository;
     private final AutoService autoService;
 
-    public ImagenAutoService(ImagenAutoRepository imagenAutoRepository, AutoService autoService) {
-        this.imagenAutoRepository = imagenAutoRepository;
-        this.autoService = autoService;
-    }
 
     public ImagenAutoRespuestaDto agregarImagen(Integer idAuto, ImagenAutoDto dto) {
         Auto auto = autoService.obtenerAutoPorId(idAuto);

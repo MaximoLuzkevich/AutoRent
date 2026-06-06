@@ -1,9 +1,12 @@
 package com.AutoRent.Backend.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.pago.PagoDto;
 import com.AutoRent.Backend.dto.pago.PagoRespuestaDto;
 import com.AutoRent.Backend.model.enums.EstadoPago;
 import com.AutoRent.Backend.service.PagoService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
@@ -19,13 +22,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/pagos")
+@Tag(name = "Pagos")
+@RequiredArgsConstructor
 public class PagoController {
 
     private final PagoService pagoService;
 
-    public PagoController(PagoService pagoService) {
-        this.pagoService = pagoService;
-    }
 
     @PostMapping
     public ResponseEntity<PagoRespuestaDto> registrarPago(@Valid @RequestBody PagoDto dto) {

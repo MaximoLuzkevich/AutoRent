@@ -1,5 +1,7 @@
 package com.AutoRent.Backend.service;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.usuario.LoginDto;
 import com.AutoRent.Backend.dto.usuario.RegistroUsuarioDto;
 import com.AutoRent.Backend.dto.usuario.UsuarioRespuestaDto;
@@ -17,21 +19,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final RolService rolService;
     private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(
-            UsuarioRepository usuarioRepository,
-            RolService rolService,
-            PasswordEncoder passwordEncoder
-    ) {
-        this.usuarioRepository = usuarioRepository;
-        this.rolService = rolService;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     public UsuarioRespuestaDto registrarUsuario(RegistroUsuarioDto dto) {
         if (usuarioRepository.existsByEmailIgnoreCase(dto.getEmail())) {

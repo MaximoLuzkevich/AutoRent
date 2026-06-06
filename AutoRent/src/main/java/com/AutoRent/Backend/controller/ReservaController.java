@@ -1,9 +1,12 @@
 package com.AutoRent.Backend.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.reserva.ReservaDto;
 import com.AutoRent.Backend.dto.reserva.ReservaRespuestaDto;
 import com.AutoRent.Backend.model.enums.EstadoReserva;
 import com.AutoRent.Backend.service.ReservaService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -17,13 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/reservas")
+@Tag(name = "Reservas")
+@RequiredArgsConstructor
 public class ReservaController {
 
     private final ReservaService reservaService;
 
-    public ReservaController(ReservaService reservaService) {
-        this.reservaService = reservaService;
-    }
 
     @PostMapping("/cliente/{idCliente}")
     public ResponseEntity<ReservaRespuestaDto> crearReserva(

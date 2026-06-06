@@ -1,5 +1,7 @@
 package com.AutoRent.Backend.service;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.categoria.CategoriaAutoRespuestaDto;
 import com.AutoRent.Backend.exception.IdNoEncontradoException;
 import com.AutoRent.Backend.model.CategoriaAuto;
@@ -9,13 +11,11 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CategoriaAutoService {
 
     private final CategoriaAutoRepository categoriaAutoRepository;
 
-    public CategoriaAutoService(CategoriaAutoRepository categoriaAutoRepository) {
-        this.categoriaAutoRepository = categoriaAutoRepository;
-    }
 
     public List<CategoriaAutoRespuestaDto> listarCategorias() {
         return categoriaAutoRepository.findAll().stream()

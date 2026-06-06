@@ -1,5 +1,7 @@
 package com.AutoRent.Backend.service;
 
+import lombok.RequiredArgsConstructor;
+
 import com.AutoRent.Backend.dto.reserva.ReservaDto;
 import com.AutoRent.Backend.dto.reserva.ReservaRespuestaDto;
 import com.AutoRent.Backend.exception.IdNoEncontradoException;
@@ -16,21 +18,13 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ReservaService {
 
     private final ReservaRepository reservaRepository;
     private final AutoRepository autoRepository;
     private final UsuarioService usuarioService;
 
-    public ReservaService(
-            ReservaRepository reservaRepository,
-            AutoRepository autoRepository,
-            UsuarioService usuarioService
-    ) {
-        this.reservaRepository = reservaRepository;
-        this.autoRepository = autoRepository;
-        this.usuarioService = usuarioService;
-    }
 
     public ReservaRespuestaDto crearReserva(Integer idCliente, ReservaDto dto) {
         validarFechas(dto);
