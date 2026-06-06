@@ -1,0 +1,56 @@
+body {
+    min-height: 100vh;
+}
+
+.card {
+    border-radius: 8px;
+}
+
+.endpoint-section {
+    margin-bottom: 28px;
+}
+
+.endpoint-card {
+    height: 100%;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.endpoint-card h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.endpoint-card p {
+    color: #6c757d;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.endpoint-card input,
+.endpoint-card select {
+    margin-bottom: 8px;
+}
+
+.accion-bloqueada {
+    opacity: 0.55;
+}
+
+.accion-bloqueada .btn {
+    pointer-events: none;
+}
+
+.lock {
+    font-size: 1.2rem;
+}
+
+.resultado {
+    min-height: 120px;
+    white-space: pre-wrap;
+}
+
+.auto-precio {
+    font-size: 0.95rem;
+}
