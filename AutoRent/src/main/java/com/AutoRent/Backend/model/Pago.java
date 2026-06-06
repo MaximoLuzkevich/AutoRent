@@ -18,31 +18,24 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "pago")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Pago {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_pago")
-    @EqualsAndHashCode.Include
     private Integer idPago;
 
     @NotNull
     @DecimalMin(value = "0.0")
-    @Column(name = "monto", nullable = false, precision = 10, scale = 2)
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal monto;
 
     @NotNull
@@ -52,7 +45,7 @@ public class Pago {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado", nullable = false)
+    @Column(nullable = false)
     private EstadoPago estado;
 
     @Column(name = "fecha_pago", nullable = false)

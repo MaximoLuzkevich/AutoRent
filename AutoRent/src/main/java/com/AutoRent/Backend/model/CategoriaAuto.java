@@ -12,34 +12,27 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "categoria_auto")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class CategoriaAuto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_categoria")
-    @EqualsAndHashCode.Include
     private Integer idCategoria;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "nombre", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private NombreCategoriaAuto nombre;
 
     @Lob
-    @Column(name = "descripcion", columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String descripcion;
 }

@@ -16,10 +16,8 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(
@@ -29,30 +27,27 @@ import lombok.Setter;
                 columnNames = {"id_cliente", "id_auto"}
         )
 )
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Review {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_review")
-    @EqualsAndHashCode.Include
     private Integer idReview;
 
     @NotNull
     @Min(1)
     @Max(5)
-    @Column(name = "puntuacion", nullable = false)
+    @Column(nullable = false)
     private Integer puntuacion;
 
-    @Column(name = "comentario", columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String comentario;
 
-    @Column(name = "fecha", nullable = false)
+    @Column(nullable = false)
     private LocalDateTime fecha;
 
     @NotNull

@@ -17,55 +17,47 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "usuario")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")
-    @EqualsAndHashCode.Include
     private Integer idUsuario;
 
     @NotBlank
     @Size(max = 100)
-    @Column(name = "nombre", nullable = false, length = 100)
+    @Column(nullable = false, length = 100)
     private String nombre;
 
     @NotBlank
     @Email
     @Size(max = 150)
-    @Column(name = "email", nullable = false, unique = true, length = 150)
+    @Column(nullable = false, unique = true, length = 150)
     private String email;
 
     @NotBlank
     @Size(max = 255)
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(nullable = false, length = 255)
     private String password;
 
     @Size(max = 30)
-    @Column(name = "telefono", length = 30)
+    @Column(length = 30)
     private String telefono;
 
     @Column(name = "fecha_registro", nullable = false)
     private LocalDateTime fechaRegistro;
 
-    @Column(name = "activo", nullable = false)
+    @Column(nullable = false)
     private Boolean activo;
 
-    @Builder.Default
     @ManyToMany
     @JoinTable(
             name = "usuario_rol",

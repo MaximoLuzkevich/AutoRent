@@ -14,26 +14,19 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "imagen_auto")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ImagenAuto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_imagen")
-    @EqualsAndHashCode.Include
     private Integer idImagen;
 
     @NotBlank
@@ -46,7 +39,7 @@ public class ImagenAuto {
     @Column(name = "url_imagen", nullable = false, length = 500)
     private String urlImagen;
 
-    @Column(name = "principal", nullable = false)
+    @Column(nullable = false)
     private Boolean principal;
 
     @Column(name = "fecha_carga", nullable = false)

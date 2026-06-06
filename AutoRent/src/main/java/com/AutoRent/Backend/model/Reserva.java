@@ -18,26 +18,19 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "reserva")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Reserva {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_reserva")
-    @EqualsAndHashCode.Include
     private Integer idReserva;
 
     @NotNull
@@ -55,7 +48,7 @@ public class Reserva {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado", nullable = false)
+    @Column(nullable = false)
     private EstadoReserva estado;
 
     @Column(name = "fecha_reserva", nullable = false)
