@@ -209,8 +209,20 @@ CREATE TABLE review (
 -- =====================================================
 -- ROLES
 -- =====================================================
+
 INSERT INTO rol (nombre)
 VALUES
 ('CLIENTE'),
 ('PROPIETARIO'),
-('ADMINISTRADOR'); 
+('ADMINISTRADOR');
+
+-- =====================================================
+-- CATEGORIAS DE AUTOS
+-- =====================================================
+INSERT INTO categoria_auto (nombre, descripcion)
+VALUES
+('ECONOMICO', 'Autos simples y accesibles para uso diario.'),
+('PREMIUM', 'Autos de gama alta con mayor comodidad.'),
+('SUV', 'Autos amplios para viajes o familias.'),
+('ELECTRICO', 'Autos electricos o de bajas emisiones.'),
+('UTILITARIO', 'Vehiculos para carga o trabajo.');
