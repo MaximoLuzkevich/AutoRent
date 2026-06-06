@@ -1,56 +1,49 @@
-body {
+.panel-page {
     min-height: 100vh;
+    background: #f8f9fa;
 }
 
-.card {
-    border-radius: 8px;
-}
-
-.endpoint-section {
+.panel-page .endpoint-section {
     margin-bottom: 28px;
 }
 
-.endpoint-card {
+.panel-page .endpoint-card {
     height: 100%;
     background: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 14px;
+    border: 1px solid #d8d8d8;
+    padding: 12px;
 }
 
-.endpoint-card h3 {
-    font-size: 16px;
+.panel-page .endpoint-card h3 {
+    font-size: 15px;
     margin-bottom: 8px;
 }
 
-.endpoint-card p {
+.panel-page .endpoint-card p {
     color: #6c757d;
     font-size: 13px;
     margin-bottom: 10px;
 }
 
-.endpoint-card input,
-.endpoint-card select {
+.panel-page .endpoint-card input,
+.panel-page .endpoint-card select {
     margin-bottom: 8px;
 }
 
-.accion-bloqueada {
-    opacity: 0.55;
+.panel-page .endpoint-card .btn-primary {
+    background: #0d6efd;
 }
 
-.accion-bloqueada .btn {
+.panel-page .accion-bloqueada {
+    opacity: 0.5;
+}
+
+.panel-page .accion-bloqueada .btn {
     pointer-events: none;
 }
 
-.lock {
-    font-size: 1.2rem;
-}
-
-.resultado {
+.panel-page .resultado {
     min-height: 120px;
     white-space: pre-wrap;
-}
-
-.auto-precio {
-    font-size: 0.95rem;
+    background: #fff;
 }
