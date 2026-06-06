@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -48,8 +47,8 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.buscarPorId(idUsuario));
     }
 
-    @GetMapping("/email")
-    public ResponseEntity<UsuarioRespuestaDto> buscarPorEmail(@RequestParam String email) {
+    @GetMapping("/email/{email}")
+    public ResponseEntity<UsuarioRespuestaDto> buscarPorEmail(@PathVariable String email) {
         return ResponseEntity.ok(usuarioService.buscarPorEmail(email));
     }
 
@@ -58,10 +57,10 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listarPorRol(rol));
     }
 
-    @GetMapping("/rol/{rol}/estado")
+    @GetMapping("/rol/{rol}/estado/{activo}")
     public ResponseEntity<List<UsuarioRespuestaDto>> listarPorRolYEstado(
             @PathVariable NombreRol rol,
-            @RequestParam Boolean activo
+            @PathVariable Boolean activo
     ) {
         return ResponseEntity.ok(usuarioService.listarPorRolYEstado(rol, activo));
     }

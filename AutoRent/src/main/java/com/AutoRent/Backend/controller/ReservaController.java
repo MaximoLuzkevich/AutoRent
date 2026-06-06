@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -26,9 +25,9 @@ public class ReservaController {
         this.reservaService = reservaService;
     }
 
-    @PostMapping
+    @PostMapping("/cliente/{idCliente}")
     public ResponseEntity<ReservaRespuestaDto> crearReserva(
-            @RequestParam Integer idCliente,
+            @PathVariable Integer idCliente,
             @Valid @RequestBody ReservaDto dto
     ) {
         return ResponseEntity.ok(reservaService.crearReserva(idCliente, dto));

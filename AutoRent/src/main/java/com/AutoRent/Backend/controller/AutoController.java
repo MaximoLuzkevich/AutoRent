@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -27,9 +26,9 @@ public class AutoController {
         this.autoService = autoService;
     }
 
-    @PostMapping
+    @PostMapping("/propietario/{idPropietario}")
     public ResponseEntity<AutoRespuestaDto> crearAuto(
-            @RequestParam Integer idPropietario,
+            @PathVariable Integer idPropietario,
             @Valid @RequestBody AutoDto dto
     ) {
         return ResponseEntity.ok(autoService.crearAuto(idPropietario, dto));
@@ -55,29 +54,29 @@ public class AutoController {
         return ResponseEntity.ok(autoService.listarPorCategoria(categoria));
     }
 
-    @GetMapping("/marca")
-    public ResponseEntity<List<AutoRespuestaDto>> listarPorMarca(@RequestParam String marca) {
+    @GetMapping("/marca/{marca}")
+    public ResponseEntity<List<AutoRespuestaDto>> listarPorMarca(@PathVariable String marca) {
         return ResponseEntity.ok(autoService.listarPorMarca(marca));
     }
 
-    @GetMapping("/ciudad")
-    public ResponseEntity<List<AutoRespuestaDto>> listarPorCiudad(@RequestParam String ciudad) {
+    @GetMapping("/ciudad/{ciudad}")
+    public ResponseEntity<List<AutoRespuestaDto>> listarPorCiudad(@PathVariable String ciudad) {
         return ResponseEntity.ok(autoService.listarPorCiudad(ciudad));
     }
 
-    @PutMapping("/{idAuto}")
+    @PutMapping("/{idAuto}/propietario/{idPropietario}")
     public ResponseEntity<AutoRespuestaDto> modificarAuto(
             @PathVariable Integer idAuto,
-            @RequestParam Integer idPropietario,
+            @PathVariable Integer idPropietario,
             @Valid @RequestBody AutoDto dto
     ) {
         return ResponseEntity.ok(autoService.modificarAuto(idAuto, idPropietario, dto));
     }
 
-    @DeleteMapping("/{idAuto}")
+    @DeleteMapping("/{idAuto}/propietario/{idPropietario}")
     public ResponseEntity<Void> desactivarAuto(
             @PathVariable Integer idAuto,
-            @RequestParam Integer idPropietario
+            @PathVariable Integer idPropietario
     ) {
         autoService.desactivarAuto(idAuto, idPropietario);
         return ResponseEntity.noContent().build();

@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -51,25 +50,25 @@ public class PerfilPropietarioController {
         return ResponseEntity.ok(perfilPropietarioService.buscarPorUsuario(idUsuario));
     }
 
-    @GetMapping("/verificados")
+    @GetMapping("/verificados/{verificado}")
     public ResponseEntity<List<PerfilPropietarioRespuestaDto>> listarPorVerificado(
-            @RequestParam Boolean verificado
+            @PathVariable Boolean verificado
     ) {
         return ResponseEntity.ok(perfilPropietarioService.listarPorVerificado(verificado));
     }
 
-    @GetMapping("/ciudad")
-    public ResponseEntity<List<PerfilPropietarioRespuestaDto>> listarPorCiudad(@RequestParam String ciudad) {
+    @GetMapping("/ciudad/{ciudad}")
+    public ResponseEntity<List<PerfilPropietarioRespuestaDto>> listarPorCiudad(@PathVariable String ciudad) {
         return ResponseEntity.ok(perfilPropietarioService.listarPorCiudad(ciudad));
     }
 
-    @GetMapping("/provincia")
-    public ResponseEntity<List<PerfilPropietarioRespuestaDto>> listarPorProvincia(@RequestParam String provincia) {
+    @GetMapping("/provincia/{provincia}")
+    public ResponseEntity<List<PerfilPropietarioRespuestaDto>> listarPorProvincia(@PathVariable String provincia) {
         return ResponseEntity.ok(perfilPropietarioService.listarPorProvincia(provincia));
     }
 
-    @GetMapping("/nombre")
-    public ResponseEntity<List<PerfilPropietarioRespuestaDto>> listarPorNombreUsuario(@RequestParam String nombre) {
+    @GetMapping("/nombre/{nombre}")
+    public ResponseEntity<List<PerfilPropietarioRespuestaDto>> listarPorNombreUsuario(@PathVariable String nombre) {
         return ResponseEntity.ok(perfilPropietarioService.listarPorNombreUsuario(nombre));
     }
 }

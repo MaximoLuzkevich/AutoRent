@@ -7,6 +7,7 @@ import com.AutoRent.Backend.model.Pago;
 import com.AutoRent.Backend.model.Reserva;
 import com.AutoRent.Backend.model.enums.EstadoPago;
 import com.AutoRent.Backend.repository.PagoRepository;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -60,8 +61,11 @@ public class PagoService {
                 .toList();
     }
 
-    public List<PagoRespuestaDto> listarPagosEntreFechas(LocalDateTime desde, LocalDateTime hasta) {
-        return pagoRepository.findByFechaPagoBetweenOrderByFechaPagoDesc(desde, hasta).stream()
+    public List<PagoRespuestaDto> listarPagosEntreFechas(LocalDate desde, LocalDate hasta) {
+        LocalDateTime fechaDesde = desde.atStartOfDay();
+        LocalDateTime fechaHasta = hasta.atTime(23, 59, 59);
+
+        return pagoRepository.findByFechaPagoBetweenOrderByFechaPagoDesc(fechaDesde, fechaHasta).stream()
                 .map(this::convertirARespuesta)
                 .toList();
     }
