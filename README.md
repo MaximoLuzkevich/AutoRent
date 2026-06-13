@@ -1,2 +1,409 @@
 # AutoRent
-Sistema de gestión de alquileres de autos
+
+AutoRent es una API RESTful desarrollada con Java y Spring Boot para gestionar una plataforma de alquiler de autos entre usuarios. El sistema permite registrar usuarios, administrar roles, publicar autos, crear reservas, registrar pagos, gestionar perfiles de propietarios, cargar imagenes de autos y publicar reviews.
+
+El proyecto fue realizado como Trabajo Practico Final de Programacion III, con foco en arquitectura backend, persistencia de datos, validaciones, manejo de errores, documentacion, autenticacion/autorizacion y uso de Git/GitHub.
+
+## Tecnologias utilizadas
+
+- Java 21
+- Spring Boot 4
+- Spring Web MVC
+- Spring Data JPA
+- Spring Security
+- MySQL
+- Maven
+- Lombok
+- Bean Validation
+- Swagger / OpenAPI
+- JWT para autenticacion
+
+## Repositorio
+
+Repositorio de GitHub:
+
+```text
+https://github.com/MaximoLuzkevich/AutoRent
+```
+
+## Estructura general
+
+El backend esta organizado en capas para separar responsabilidades:
+
+```text
+AutoRent/src/main/java/com/AutoRent/Backend
+  config/       Configuracion de Spring Security, CORS y OpenAPI
+  controller/   Endpoints REST expuestos por la API
+  dto/          Objetos usados para requests y responses
+  exception/    Excepciones propias y manejador global de errores
+  model/        Entidades JPA que representan el dominio
+  repository/   Acceso a datos mediante Spring Data JPA
+  security/     Logica de JWT, filtro de autenticacion y UserDetailsService
+  service/      Logica de negocio del sistema
+```
+
+La idea principal es que los controllers reciban las peticiones HTTP, los services resuelvan las reglas de negocio, los repositories accedan a la base de datos y los DTOs eviten exponer directamente las entidades.
+
+## Entidades principales
+
+- `Usuario`: persona registrada en el sistema.
+- `Rol`: permisos del usuario dentro de la plataforma.
+- `PerfilPropietario`: datos extra de un usuario que publica autos.
+- `Auto`: vehiculo disponible para alquiler.
+- `CategoriaAuto`: categoria del auto, por ejemplo economico, premium, SUV o electrico.
+- `ImagenAuto`: imagenes asociadas a un auto.
+- `Reserva`: alquiler solicitado por un cliente para un auto y rango de fechas.
+- `Pago`: pago asociado a una reserva.
+- `Review`: opinion y calificacion de un cliente sobre un auto.
+
+## Roles del sistema
+
+El sistema maneja tres roles:
+
+- `CLIENTE`: puede registrarse, iniciar sesion, consultar autos, crear reservas, registrar pagos y publicar reviews.
+- `PROPIETARIO`: puede publicar autos, modificar sus publicaciones, gestionar imagenes y consultar reservas asociadas a sus autos.
+- `ADMINISTRADOR`: puede consultar usuarios, administrar roles, verificar propietarios, aprobar/rechazar pagos y acceder a informacion administrativa.
+
+## Base de datos
+
+La API utiliza MySQL. El script de creacion de base de datos se encuentra en:
+
+```text
+db_autoRent.sql
+```
+
+El script incluye la creacion de tablas principales y datos iniciales para roles y categorias.
+
+Configuracion local actual:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/db_autoRent
+spring.datasource.username=root
+spring.datasource.password=123456789
+spring.jpa.hibernate.ddl-auto=validate
+```
+
+Para ejecutar el proyecto localmente, primero se debe crear la base ejecutando el script SQL en MySQL.
+
+## Como ejecutar localmente
+
+1. Clonar el repositorio:
+
+```bash
+git clone https://github.com/MaximoLuzkevich/AutoRent.git
+cd AutoRent/AutoRent
+```
+
+2. Crear la base de datos en MySQL usando el archivo:
+
+```text
+../db_autoRent.sql
+```
+
+3. Verificar la configuracion de `application.properties`:
+
+```text
+AutoRent/src/main/resources/application.properties
+```
+
+4. Ejecutar la aplicacion:
+
+```bash
+mvn spring-boot:run
+```
+
+5. La API queda disponible en:
+
+```text
+http://localhost:8080
+```
+
+## Swagger / OpenAPI
+
+La documentacion navegable de endpoints esta disponible en:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+Tambien puede accederse a la especificacion OpenAPI en:
+
+```text
+http://localhost:8080/v3/api-docs
+```
+
+Swagger permite visualizar y probar los endpoints desde el navegador.
+
+## Autenticacion y autorizacion
+
+El sistema usa Spring Security con JWT.
+
+Endpoints publicos principales:
+
+- `POST /api/usuarios/registro`
+- `POST /api/usuarios/login`
+- `GET /api/autos`
+- `GET /api/autos/{idAuto}`
+- `GET /api/categorias`
+- `GET /api/reviews`
+- Swagger/OpenAPI
+
+Para iniciar sesion:
+
+```http
+POST /api/usuarios/login
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "email": "usuario@test.com",
+  "password": "123456"
+}
+```
+
+Respuesta esperada:
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "tipoToken": "Bearer",
+  "usuario": {
+    "idUsuario": 1,
+    "nombre": "Usuario Demo",
+    "email": "usuario@test.com",
+    "telefono": "1122334455",
+    "fechaRegistro": "2026-06-13T15:00:00",
+    "activo": true,
+    "roles": ["CLIENTE"]
+  }
+}
+```
+
+Para consumir endpoints protegidos se debe enviar el token en el header:
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+```
+
+La autorizacion restringe acciones segun los roles `CLIENTE`, `PROPIETARIO` y `ADMINISTRADOR`.
+
+## Endpoints principales
+
+### Usuarios
+
+- `POST /api/usuarios/registro`: registrar usuario.
+- `POST /api/usuarios/login`: iniciar sesion y obtener token JWT.
+- `GET /api/usuarios`: listar usuarios.
+- `GET /api/usuarios/{idUsuario}`: buscar usuario por ID.
+- `GET /api/usuarios/email/{email}`: buscar usuario por email.
+- `GET /api/usuarios/rol/{rol}`: listar usuarios por rol.
+- `DELETE /api/usuarios/{idUsuario}`: desactivar usuario.
+- `PUT /api/usuarios/{idUsuario}/roles/{rol}`: agregar rol a usuario.
+
+### Autos
+
+- `POST /api/autos/propietario/{idPropietario}`: publicar auto.
+- `GET /api/autos`: listar autos activos.
+- `GET /api/autos/{idAuto}`: buscar auto por ID.
+- `GET /api/autos/propietario/{idPropietario}`: listar autos de un propietario.
+- `GET /api/autos/categoria/{categoria}`: filtrar por categoria.
+- `GET /api/autos/marca/{marca}`: filtrar por marca.
+- `GET /api/autos/ciudad/{ciudad}`: filtrar por ciudad.
+- `PUT /api/autos/{idAuto}/propietario/{idPropietario}`: modificar auto.
+- `DELETE /api/autos/{idAuto}/propietario/{idPropietario}`: desactivar auto.
+
+### Reservas
+
+- `POST /api/reservas/cliente/{idCliente}`: crear reserva.
+- `GET /api/reservas/{idReserva}`: buscar reserva.
+- `GET /api/reservas/cliente/{idCliente}`: listar reservas de un cliente.
+- `GET /api/reservas/propietario/{idPropietario}`: listar reservas de autos de un propietario.
+- `GET /api/reservas/estado/{estado}`: listar reservas por estado.
+- `PUT /api/reservas/{idReserva}/confirmar`: confirmar reserva.
+- `PUT /api/reservas/{idReserva}/cancelar`: cancelar reserva.
+- `PUT /api/reservas/{idReserva}/finalizar`: finalizar reserva.
+
+### Pagos
+
+- `POST /api/pagos`: registrar pago.
+- `GET /api/pagos/reserva/{idReserva}`: listar pagos por reserva.
+- `GET /api/pagos/cliente/{idCliente}`: listar pagos de un cliente.
+- `GET /api/pagos/propietario/{idPropietario}`: listar pagos de un propietario.
+- `GET /api/pagos/estado/{estado}`: listar pagos por estado.
+- `GET /api/pagos/fechas/{desde}/{hasta}`: listar pagos por rango de fechas.
+- `PUT /api/pagos/{idPago}/aprobar`: aprobar pago.
+- `PUT /api/pagos/{idPago}/rechazar`: rechazar pago.
+
+### Propietarios
+
+- `POST /api/propietarios/{idUsuario}`: crear perfil de propietario.
+- `PUT /api/propietarios/{idUsuario}`: modificar perfil.
+- `PUT /api/propietarios/{idUsuario}/verificar`: verificar propietario.
+- `GET /api/propietarios/{idUsuario}`: buscar perfil por usuario.
+- `GET /api/propietarios/verificados/{verificado}`: listar por estado de verificacion.
+- `GET /api/propietarios/ciudad/{ciudad}`: filtrar por ciudad.
+- `GET /api/propietarios/provincia/{provincia}`: filtrar por provincia.
+- `GET /api/propietarios/nombre/{nombre}`: filtrar por nombre de usuario.
+
+### Imagenes de autos
+
+- `POST /api/autos/{idAuto}/imagenes`: agregar imagen.
+- `GET /api/autos/{idAuto}/imagenes`: listar imagenes de un auto.
+- `GET /api/autos/{idAuto}/imagenes/principal`: obtener imagen principal.
+- `DELETE /api/autos/{idAuto}/imagenes/{idImagen}`: eliminar imagen.
+
+### Reviews
+
+- `POST /api/reviews/cliente/{idCliente}`: crear review.
+- `GET /api/reviews`: listar reviews.
+- `GET /api/reviews/{idReview}`: buscar review por ID.
+- `GET /api/reviews/auto/{idAuto}`: listar reviews de un auto.
+- `DELETE /api/reviews/{idReview}`: eliminar review.
+
+### Categorias y roles
+
+- `GET /api/categorias`: listar categorias.
+- `GET /api/categorias/{nombre}`: buscar categoria.
+- `GET /api/roles`: listar roles.
+- `GET /api/roles/{nombreRol}`: buscar rol.
+
+## Ejemplos de requests
+
+### Registro
+
+```http
+POST /api/usuarios/registro
+Content-Type: application/json
+```
+
+```json
+{
+  "nombre": "Cliente Demo",
+  "email": "cliente@test.com",
+  "password": "123456",
+  "telefono": "1122334455"
+}
+```
+
+### Crear reserva
+
+```http
+POST /api/reservas/cliente/1
+Authorization: Bearer TOKEN
+Content-Type: application/json
+```
+
+```json
+{
+  "idAuto": 1,
+  "fechaInicio": "2026-07-01",
+  "fechaFin": "2026-07-05"
+}
+```
+
+### Registrar pago
+
+```http
+POST /api/pagos
+Authorization: Bearer TOKEN
+Content-Type: application/json
+```
+
+```json
+{
+  "idReserva": 1,
+  "monto": 40000,
+  "metodoPago": "TARJETA"
+}
+```
+
+## Validaciones y manejo de errores
+
+El proyecto utiliza Bean Validation para validar los datos recibidos en DTOs y entidades. Algunos ejemplos:
+
+- Campos obligatorios con `@NotBlank` y `@NotNull`.
+- Formato de email con `@Email`.
+- Longitudes maximas con `@Size`.
+- Valores numericos minimos con `@Min` y `@DecimalMin`.
+
+Tambien cuenta con excepciones personalizadas y un `GlobalExceptionHandler` para devolver respuestas claras:
+
+- `IdNoEncontradoException`: recurso inexistente.
+- `DatoDuplicadoException`: datos repetidos, por ejemplo email o patente.
+- `ParametroIncorrectoException`: datos invalidos para una regla de negocio.
+- `LoginRequeridoException`: credenciales invalidas o usuario inactivo.
+- `PermisoInsuficienteException`: usuario sin permisos para una accion.
+
+## Reglas de negocio destacadas
+
+- Un usuario nuevo se registra como `CLIENTE`.
+- Las passwords se guardan encriptadas con BCrypt.
+- Solo usuarios con rol `PROPIETARIO` o `ADMINISTRADOR` pueden publicar autos.
+- No puede registrarse un email duplicado.
+- No puede registrarse una patente duplicada.
+- No puede crearse una reserva si la fecha de fin no es posterior a la fecha de inicio.
+- No puede crearse una reserva con fecha de inicio anterior al dia actual.
+- No puede crearse una reserva si ya existe otra reserva superpuesta para el mismo auto.
+- Un propietario no puede reservar su propio auto.
+- Las reservas manejan estados como `PENDIENTE`, `CONFIRMADA`, `CANCELADA` y `FINALIZADA`.
+- Solo se pueden confirmar reservas `PENDIENTE`.
+- Solo se pueden finalizar reservas `CONFIRMADA`.
+- No se pueden cancelar reservas `FINALIZADA`.
+- Los pagos manejan estados como `PENDIENTE`, `APROBADO` y `RECHAZADO`.
+- El monto de un pago debe coincidir con el total de la reserva.
+- No puede registrarse mas de un pago pendiente o aprobado para la misma reserva.
+- Solo se pueden aprobar o rechazar pagos `PENDIENTE`.
+- Al aprobar un pago valido, la reserva queda `CONFIRMADA` si estaba `PENDIENTE`.
+
+## Tests
+
+El proyecto incluye una prueba de carga de contexto:
+
+```text
+AutoRent/src/test/java/com/AutoRent/AutoRentApplicationTests.java
+```
+
+Para ejecutar los tests:
+
+```bash
+mvn test
+```
+
+Actualmente esta pendiente ampliar la cobertura con tests unitarios o de integracion para reglas clave como login, reservas superpuestas, email duplicado y patente duplicada.
+
+## Despliegue
+
+Pendiente de configurar.
+
+La consigna solicita entregar un enlace a la API desplegada. Una opcion posible es desplegar la aplicacion en Render, Railway o una plataforma similar, configurando una base de datos MySQL remota y variables de entorno para la conexion y el secreto JWT.
+
+Cuando el despliegue este disponible, agregar aca:
+
+```text
+URL de la API desplegada: pendiente
+Swagger desplegado: pendiente
+```
+
+## Integrantes
+
+Pendiente de completar con los integrantes del grupo.
+
+```text
+- Integrante 1:
+- Integrante 2:
+- Integrante 3:
+- Integrante 4:
+- Integrante 5:
+```
+
+## Aclaraciones para la correccion
+
+- El proyecto esta pensado como backend API REST.
+- La documentacion tecnica de endpoints se encuentra disponible mediante Swagger/OpenAPI.
+- La autenticacion se realiza mediante JWT.
+- La autorizacion se basa en roles.
+- El script SQL contiene la estructura de base de datos y datos iniciales.
+- Algunas mejoras pendientes recomendadas son ampliar tests, completar despliegue y documentar usuarios de prueba definitivos.
