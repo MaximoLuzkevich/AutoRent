@@ -19,4 +19,6 @@ public interface PagoRepository extends JpaRepository<Pago, Integer> {
     List<Pago> findByEstadoOrderByFechaPagoDesc(EstadoPago estado);
 
     List<Pago> findByFechaPagoBetweenOrderByFechaPagoDesc(LocalDateTime desde, LocalDateTime hasta);
+
+    boolean existsByReservaIdReservaAndEstado(Integer idReserva, EstadoPago estado);
 }

@@ -13,6 +13,7 @@ import com.AutoRent.Backend.model.enums.EstadoReserva;
 import com.AutoRent.Backend.repository.AutoRepository;
 import com.AutoRent.Backend.repository.ReservaRepository;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,10 @@ public class ReservaService {
 
         if (!Boolean.TRUE.equals(auto.getActivo())) {
             throw new ParametroIncorrectoException("El auto no esta disponible");
+        }
+
+        if (auto.getPropietario().getIdUsuario().equals(cliente.getIdUsuario())) {
+            throw new ParametroIncorrectoException("No podes reservar tu propio auto");
         }
 
         if (existeReservaSuperpuesta(dto)) {
@@ -93,18 +98,26 @@ public class ReservaService {
 
     public ReservaRespuestaDto confirmarReserva(Integer idReserva) {
         Reserva reserva = obtenerReservaPorId(idReserva);
+        validarEstadoActual(reserva, EstadoReserva.PENDIENTE, "Solo se pueden confirmar reservas pendientes");
         reserva.setEstado(EstadoReserva.CONFIRMADA);
         return convertirARespuesta(reservaRepository.save(reserva));
     }
 
     public ReservaRespuestaDto cancelarReserva(Integer idReserva) {
         Reserva reserva = obtenerReservaPorId(idReserva);
+        if (reserva.getEstado() == EstadoReserva.CANCELADA) {
+            throw new ParametroIncorrectoException("La reserva ya esta cancelada");
+        }
+        if (reserva.getEstado() == EstadoReserva.FINALIZADA) {
+            throw new ParametroIncorrectoException("No se puede cancelar una reserva finalizada");
+        }
         reserva.setEstado(EstadoReserva.CANCELADA);
         return convertirARespuesta(reservaRepository.save(reserva));
     }
 
     public ReservaRespuestaDto finalizarReserva(Integer idReserva) {
         Reserva reserva = obtenerReservaPorId(idReserva);
+        validarEstadoActual(reserva, EstadoReserva.CONFIRMADA, "Solo se pueden finalizar reservas confirmadas");
         reserva.setEstado(EstadoReserva.FINALIZADA);
         return convertirARespuesta(reservaRepository.save(reserva));
     }
@@ -115,6 +128,10 @@ public class ReservaService {
     }
 
     private void validarFechas(ReservaDto dto) {
+        if (dto.getFechaInicio().isBefore(LocalDate.now())) {
+            throw new ParametroIncorrectoException("La fecha de inicio no puede ser anterior a hoy");
+        }
+
         if (!dto.getFechaFin().isAfter(dto.getFechaInicio())) {
             throw new ParametroIncorrectoException("La fecha de fin debe ser posterior a la fecha de inicio");
         }
@@ -132,6 +149,25 @@ public class ReservaService {
     private BigDecimal calcularPrecioTotal(Auto auto, ReservaDto dto) {
         long dias = ChronoUnit.DAYS.between(dto.getFechaInicio(), dto.getFechaFin());
         return auto.getPrecioDia().multiply(BigDecimal.valueOf(dias));
+    }
+
+    public void confirmarReservaPorPago(Reserva reserva) {
+        if (reserva.getEstado() == EstadoReserva.CANCELADA) {
+            throw new ParametroIncorrectoException("No se puede aprobar un pago de una reserva cancelada");
+        }
+        if (reserva.getEstado() == EstadoReserva.FINALIZADA) {
+            throw new ParametroIncorrectoException("No se puede aprobar un pago de una reserva finalizada");
+        }
+        if (reserva.getEstado() == EstadoReserva.PENDIENTE) {
+            reserva.setEstado(EstadoReserva.CONFIRMADA);
+            reservaRepository.save(reserva);
+        }
+    }
+
+    private void validarEstadoActual(Reserva reserva, EstadoReserva estadoEsperado, String mensaje) {
+        if (reserva.getEstado() != estadoEsperado) {
+            throw new ParametroIncorrectoException(mensaje);
+        }
     }
 
     private ReservaRespuestaDto convertirARespuesta(Reserva reserva) {

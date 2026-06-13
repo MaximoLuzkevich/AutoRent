@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class PagoDto {
 
     @NotNull
-    @DecimalMin(value = "0.0")
+    @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal monto;
 
     @NotNull

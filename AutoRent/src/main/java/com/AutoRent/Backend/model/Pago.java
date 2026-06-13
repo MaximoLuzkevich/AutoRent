@@ -34,7 +34,7 @@ public class Pago {
     private Integer idPago;
 
     @NotNull
-    @DecimalMin(value = "0.0")
+    @DecimalMin(value = "0.0", inclusive = false)
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal monto;
 
