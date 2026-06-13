@@ -2,6 +2,7 @@ package com.AutoRent.Backend.controller;
 
 import lombok.RequiredArgsConstructor;
 
+import com.AutoRent.Backend.dto.usuario.AuthRespuestaDto;
 import com.AutoRent.Backend.dto.usuario.LoginDto;
 import com.AutoRent.Backend.dto.usuario.RegistroUsuarioDto;
 import com.AutoRent.Backend.dto.usuario.UsuarioRespuestaDto;
@@ -35,7 +36,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UsuarioRespuestaDto> iniciarSesion(@Valid @RequestBody LoginDto dto) {
+    public ResponseEntity<AuthRespuestaDto> iniciarSesion(@Valid @RequestBody LoginDto dto) {
         return ResponseEntity.ok(usuarioService.iniciarSesion(dto));
     }
 

@@ -2,6 +2,7 @@ package com.AutoRent.Backend.service;
 
 import lombok.RequiredArgsConstructor;
 
+import com.AutoRent.Backend.dto.usuario.AuthRespuestaDto;
 import com.AutoRent.Backend.dto.usuario.LoginDto;
 import com.AutoRent.Backend.dto.usuario.RegistroUsuarioDto;
 import com.AutoRent.Backend.dto.usuario.UsuarioRespuestaDto;
@@ -12,6 +13,7 @@ import com.AutoRent.Backend.model.Rol;
 import com.AutoRent.Backend.model.Usuario;
 import com.AutoRent.Backend.model.enums.NombreRol;
 import com.AutoRent.Backend.repository.UsuarioRepository;
+import com.AutoRent.Backend.security.JwtService;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,6 +27,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final RolService rolService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
 
     public UsuarioRespuestaDto registrarUsuario(RegistroUsuarioDto dto) {
@@ -45,7 +48,7 @@ public class UsuarioService {
         return convertirARespuesta(usuarioGuardado);
     }
 
-    public UsuarioRespuestaDto iniciarSesion(LoginDto dto) {
+    public AuthRespuestaDto iniciarSesion(LoginDto dto) {
         Usuario usuario = usuarioRepository.findByEmailIgnoreCase(dto.getEmail())
                 .orElseThrow(() -> new LoginRequeridoException("Credenciales incorrectas"));
 
@@ -57,7 +60,11 @@ public class UsuarioService {
             throw new LoginRequeridoException("Credenciales incorrectas");
         }
 
-        return convertirARespuesta(usuario);
+        return new AuthRespuestaDto(
+                jwtService.generarToken(usuario),
+                "Bearer",
+                convertirARespuesta(usuario)
+        );
     }
 
     public List<UsuarioRespuestaDto> listarUsuarios() {
