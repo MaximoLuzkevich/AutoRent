@@ -30,6 +30,10 @@ public class JwtService {
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.expiration-millis}") long expirationMillis
     ) {
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalArgumentException("jwt.secret debe tener al menos 32 caracteres");
+        }
+
         this.secret = secret.getBytes(StandardCharsets.UTF_8);
         this.expirationMillis = expirationMillis;
     }
