@@ -42,7 +42,7 @@ public class Reserva {
     private LocalDate fechaFin;
 
     @NotNull
-    @DecimalMin(value = "0.0")
+    @DecimalMin(value = "0.0", inclusive = false)
     @Column(name = "precio_total", nullable = false, precision = 10, scale = 2)
     private BigDecimal precioTotal;
 

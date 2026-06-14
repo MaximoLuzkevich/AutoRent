@@ -26,6 +26,13 @@ public class PerfilPropietarioController {
     private final PerfilPropietarioService perfilPropietarioService;
 
 
+    @PostMapping("/me")
+    public ResponseEntity<PerfilPropietarioRespuestaDto> crearMiPerfil(
+            @Valid @RequestBody PerfilPropietarioDto dto
+    ) {
+        return ResponseEntity.ok(perfilPropietarioService.crearMiPerfil(dto));
+    }
+
     @PostMapping("/{idUsuario}")
     public ResponseEntity<PerfilPropietarioRespuestaDto> crearPerfil(
             @PathVariable Integer idUsuario,
@@ -42,6 +49,13 @@ public class PerfilPropietarioController {
         return ResponseEntity.ok(perfilPropietarioService.modificarPerfil(idUsuario, dto));
     }
 
+    @PutMapping("/me")
+    public ResponseEntity<PerfilPropietarioRespuestaDto> modificarMiPerfil(
+            @Valid @RequestBody PerfilPropietarioDto dto
+    ) {
+        return ResponseEntity.ok(perfilPropietarioService.modificarMiPerfil(dto));
+    }
+
     @PutMapping("/{idUsuario}/verificar")
     public ResponseEntity<PerfilPropietarioRespuestaDto> verificarPropietario(@PathVariable Integer idUsuario) {
         return ResponseEntity.ok(perfilPropietarioService.verificarPropietario(idUsuario));
@@ -50,6 +64,11 @@ public class PerfilPropietarioController {
     @GetMapping("/{idUsuario}")
     public ResponseEntity<PerfilPropietarioRespuestaDto> buscarPorUsuario(@PathVariable Integer idUsuario) {
         return ResponseEntity.ok(perfilPropietarioService.buscarPorUsuario(idUsuario));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<PerfilPropietarioRespuestaDto> buscarMiPerfil() {
+        return ResponseEntity.ok(perfilPropietarioService.buscarMiPerfil());
     }
 
     @GetMapping("/verificados/{verificado}")

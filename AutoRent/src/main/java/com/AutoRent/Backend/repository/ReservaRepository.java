@@ -28,4 +28,10 @@ public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
             LocalDate fechaFin,
             LocalDate fechaInicio
     );
+
+    boolean existsByClienteIdUsuarioAndAutoIdAutoAndEstado(
+            Integer idCliente,
+            Integer idAuto,
+            EstadoReserva estado
+    );
 }

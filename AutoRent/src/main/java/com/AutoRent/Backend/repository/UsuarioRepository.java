@@ -17,6 +17,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     @Query("select u from Usuario u left join fetch u.roles where lower(u.email) = lower(:email)")
     Optional<Usuario> findByEmailIgnoreCaseConRoles(@Param("email") String email);
 
+    @Query("select u from Usuario u left join fetch u.roles where u.idUsuario = :idUsuario")
+    Optional<Usuario> findByIdConRoles(@Param("idUsuario") Integer idUsuario);
+
     boolean existsByEmailIgnoreCase(String email);
 
     List<Usuario> findDistinctByRolesNombreOrderByFechaRegistroDesc(NombreRol rol);

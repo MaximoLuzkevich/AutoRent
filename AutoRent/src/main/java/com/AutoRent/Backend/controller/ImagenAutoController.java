@@ -45,8 +45,8 @@ public class ImagenAutoController {
     }
 
     @DeleteMapping("/{idImagen}")
-    public ResponseEntity<Void> eliminarImagen(@PathVariable Integer idImagen) {
-        imagenAutoService.eliminarImagen(idImagen);
+    public ResponseEntity<Void> eliminarImagen(@PathVariable Integer idAuto, @PathVariable Integer idImagen) {
+        imagenAutoService.eliminarImagen(idAuto, idImagen);
         return ResponseEntity.noContent().build();
     }
 }

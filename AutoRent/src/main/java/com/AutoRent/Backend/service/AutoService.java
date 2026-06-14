@@ -9,7 +9,6 @@ import com.AutoRent.Backend.exception.IdNoEncontradoException;
 import com.AutoRent.Backend.exception.PermisoInsuficienteException;
 import com.AutoRent.Backend.model.Auto;
 import com.AutoRent.Backend.model.CategoriaAuto;
-import com.AutoRent.Backend.model.Rol;
 import com.AutoRent.Backend.model.Usuario;
 import com.AutoRent.Backend.model.enums.NombreCategoriaAuto;
 import com.AutoRent.Backend.model.enums.NombreRol;
@@ -27,8 +26,22 @@ public class AutoService {
     private final UsuarioService usuarioService;
 
 
+    public AutoRespuestaDto crearAutoAutenticado(AutoDto dto) {
+        Usuario propietario = usuarioService.obtenerUsuarioAutenticado();
+        return crearAutoParaPropietario(propietario, dto);
+    }
+
     public AutoRespuestaDto crearAuto(Integer idPropietario, AutoDto dto) {
-        Usuario propietario = usuarioService.obtenerUsuarioPorId(idPropietario);
+        usuarioService.validarUsuarioActualOAdministrador(
+                idPropietario,
+                "No podes publicar autos para otro usuario"
+        );
+
+        Usuario propietario = usuarioService.obtenerUsuarioPorIdConRoles(idPropietario);
+        return crearAutoParaPropietario(propietario, dto);
+    }
+
+    private AutoRespuestaDto crearAutoParaPropietario(Usuario propietario, AutoDto dto) {
         validarPermisoParaPublicar(propietario);
 
         if (autoRepository.existsByPatenteIgnoreCase(dto.getPatente())) {
@@ -85,8 +98,24 @@ public class AutoService {
 
     public AutoRespuestaDto modificarAuto(Integer idAuto, Integer idPropietario, AutoDto dto) {
         Auto auto = obtenerAutoPorId(idAuto);
+        usuarioService.validarUsuarioActualOAdministrador(
+                idPropietario,
+                "No podes modificar autos de otro usuario"
+        );
         validarPropietario(auto, idPropietario);
 
+        return modificarAutoValidado(auto, dto);
+    }
+
+    public AutoRespuestaDto modificarAutoAutenticado(Integer idAuto, AutoDto dto) {
+        Auto auto = obtenerAutoPorId(idAuto);
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        validarPropietarioOAdministrador(auto, usuario);
+
+        return modificarAutoValidado(auto, dto);
+    }
+
+    private AutoRespuestaDto modificarAutoValidado(Auto auto, AutoDto dto) {
         if (!auto.getPatente().equalsIgnoreCase(dto.getPatente())
                 && autoRepository.existsByPatenteIgnoreCase(dto.getPatente())) {
             throw new DatoDuplicadoException("La patente ya esta registrada");
@@ -101,7 +130,20 @@ public class AutoService {
 
     public void desactivarAuto(Integer idAuto, Integer idPropietario) {
         Auto auto = obtenerAutoPorId(idAuto);
+        usuarioService.validarUsuarioActualOAdministrador(
+                idPropietario,
+                "No podes desactivar autos de otro usuario"
+        );
         validarPropietario(auto, idPropietario);
+
+        auto.setActivo(false);
+        autoRepository.save(auto);
+    }
+
+    public void desactivarAutoAutenticado(Integer idAuto) {
+        Auto auto = obtenerAutoPorId(idAuto);
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        validarPropietarioOAdministrador(auto, usuario);
 
         auto.setActivo(false);
         autoRepository.save(auto);
@@ -146,10 +188,15 @@ public class AutoService {
         }
     }
 
+    private void validarPropietarioOAdministrador(Auto auto, Usuario usuario) {
+        if (!auto.getPropietario().getIdUsuario().equals(usuario.getIdUsuario())
+                && !usuarioService.tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
+            throw new PermisoInsuficienteException("No podes modificar este auto");
+        }
+    }
+
     private boolean tieneRol(Usuario usuario, NombreRol nombreRol) {
-        return usuario.getRoles().stream()
-                .map(Rol::getNombre)
-                .anyMatch(nombreRol::equals);
+        return usuarioService.tieneRol(usuario, nombreRol);
     }
 
     private AutoRespuestaDto convertirARespuesta(Auto auto) {

@@ -6,16 +6,19 @@ import com.AutoRent.Backend.dto.pago.PagoDto;
 import com.AutoRent.Backend.dto.pago.PagoRespuestaDto;
 import com.AutoRent.Backend.exception.IdNoEncontradoException;
 import com.AutoRent.Backend.exception.ParametroIncorrectoException;
+import com.AutoRent.Backend.exception.PermisoInsuficienteException;
 import com.AutoRent.Backend.model.Pago;
 import com.AutoRent.Backend.model.Reserva;
 import com.AutoRent.Backend.model.enums.EstadoPago;
 import com.AutoRent.Backend.model.enums.EstadoReserva;
+import com.AutoRent.Backend.model.enums.NombreRol;
 import com.AutoRent.Backend.repository.PagoRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,10 +26,13 @@ public class PagoService {
 
     private final PagoRepository pagoRepository;
     private final ReservaService reservaService;
+    private final UsuarioService usuarioService;
 
 
+    @Transactional
     public PagoRespuestaDto registrarPago(PagoDto dto) {
         Reserva reserva = reservaService.obtenerReservaPorId(dto.getIdReserva());
+        validarClienteDeReserva(reserva, "No podes pagar una reserva de otro cliente");
         validarReservaPuedePagarse(reserva);
         validarMonto(reserva, dto.getMonto());
 
@@ -48,32 +54,63 @@ public class PagoService {
     }
 
     public List<PagoRespuestaDto> listarPagosPorReserva(Integer idReserva) {
-        reservaService.obtenerReservaPorId(idReserva);
+        Reserva reserva = reservaService.obtenerReservaPorId(idReserva);
+        validarClientePropietarioOAdministrador(reserva, "No podes consultar pagos de esta reserva");
 
         return pagoRepository.findByReservaIdReservaOrderByFechaPagoDesc(idReserva).stream()
                 .map(this::convertirARespuesta)
                 .toList();
     }
 
+    public List<PagoRespuestaDto> listarMisPagos() {
+        Integer idUsuario = usuarioService.obtenerUsuarioAutenticado().getIdUsuario();
+
+        return pagoRepository.findByReservaClienteIdUsuarioOrderByFechaPagoDesc(idUsuario).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
+    public List<PagoRespuestaDto> listarPagosDeMisAutos() {
+        Integer idUsuario = usuarioService.obtenerUsuarioAutenticado().getIdUsuario();
+
+        return pagoRepository.findByReservaAutoPropietarioIdUsuarioOrderByFechaPagoDesc(idUsuario).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
     public List<PagoRespuestaDto> listarPagosPorCliente(Integer idCliente) {
+        usuarioService.validarUsuarioActualOAdministrador(
+                idCliente,
+                "No podes consultar pagos de otro cliente"
+        );
+
         return pagoRepository.findByReservaClienteIdUsuarioOrderByFechaPagoDesc(idCliente).stream()
                 .map(this::convertirARespuesta)
                 .toList();
     }
 
     public List<PagoRespuestaDto> listarPagosPorPropietario(Integer idPropietario) {
+        usuarioService.validarUsuarioActualOAdministrador(
+                idPropietario,
+                "No podes consultar pagos de otro propietario"
+        );
+
         return pagoRepository.findByReservaAutoPropietarioIdUsuarioOrderByFechaPagoDesc(idPropietario).stream()
                 .map(this::convertirARespuesta)
                 .toList();
     }
 
     public List<PagoRespuestaDto> listarPagosPorEstado(EstadoPago estado) {
+        validarAdministrador("Solo un administrador puede consultar pagos por estado");
+
         return pagoRepository.findByEstadoOrderByFechaPagoDesc(estado).stream()
                 .map(this::convertirARespuesta)
                 .toList();
     }
 
     public List<PagoRespuestaDto> listarPagosEntreFechas(LocalDate desde, LocalDate hasta) {
+        validarAdministrador("Solo un administrador puede consultar pagos por fechas");
+
         if (hasta.isBefore(desde)) {
             throw new ParametroIncorrectoException("La fecha hasta no puede ser anterior a la fecha desde");
         }
@@ -86,7 +123,9 @@ public class PagoService {
                 .toList();
     }
 
+    @Transactional
     public PagoRespuestaDto aprobarPago(Integer idPago) {
+        validarAdministrador("Solo un administrador puede aprobar pagos");
         Pago pago = obtenerPagoPorId(idPago);
         validarPagoPendiente(pago);
         validarReservaPuedePagarse(pago.getReserva());
@@ -102,7 +141,9 @@ public class PagoService {
         return convertirARespuesta(pagoGuardado);
     }
 
+    @Transactional
     public PagoRespuestaDto rechazarPago(Integer idPago) {
+        validarAdministrador("Solo un administrador puede rechazar pagos");
         Pago pago = obtenerPagoPorId(idPago);
         validarPagoPendiente(pago);
         pago.setEstado(EstadoPago.RECHAZADO);
@@ -143,6 +184,36 @@ public class PagoService {
     private void validarPagoPendiente(Pago pago) {
         if (pago.getEstado() != EstadoPago.PENDIENTE) {
             throw new ParametroIncorrectoException("Solo se pueden modificar pagos pendientes");
+        }
+    }
+
+    private void validarClienteDeReserva(Reserva reserva, String mensaje) {
+        Integer idUsuario = usuarioService.obtenerUsuarioAutenticado().getIdUsuario();
+        Integer idCliente = reserva.getCliente().getIdUsuario();
+
+        if (!idCliente.equals(idUsuario)) {
+            throw new PermisoInsuficienteException(mensaje);
+        }
+    }
+
+    private void validarClientePropietarioOAdministrador(Reserva reserva, String mensaje) {
+        var usuario = usuarioService.obtenerUsuarioAutenticado();
+        Integer idUsuario = usuario.getIdUsuario();
+        Integer idCliente = reserva.getCliente().getIdUsuario();
+        Integer idPropietario = reserva.getAuto().getPropietario().getIdUsuario();
+
+        if (!idCliente.equals(idUsuario)
+                && !idPropietario.equals(idUsuario)
+                && !usuarioService.tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
+            throw new PermisoInsuficienteException(mensaje);
+        }
+    }
+
+    private void validarAdministrador(String mensaje) {
+        var usuario = usuarioService.obtenerUsuarioAutenticado();
+
+        if (!usuarioService.tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
+            throw new PermisoInsuficienteException(mensaje);
         }
     }
 }

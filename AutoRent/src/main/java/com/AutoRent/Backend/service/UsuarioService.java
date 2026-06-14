@@ -9,6 +9,7 @@ import com.AutoRent.Backend.dto.usuario.UsuarioRespuestaDto;
 import com.AutoRent.Backend.exception.DatoDuplicadoException;
 import com.AutoRent.Backend.exception.IdNoEncontradoException;
 import com.AutoRent.Backend.exception.LoginRequeridoException;
+import com.AutoRent.Backend.exception.PermisoInsuficienteException;
 import com.AutoRent.Backend.model.Rol;
 import com.AutoRent.Backend.model.Usuario;
 import com.AutoRent.Backend.model.enums.NombreRol;
@@ -17,8 +18,11 @@ import com.AutoRent.Backend.security.JwtService;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +34,7 @@ public class UsuarioService {
     private final JwtService jwtService;
 
 
+    @Transactional
     public UsuarioRespuestaDto registrarUsuario(RegistroUsuarioDto dto) {
         if (usuarioRepository.existsByEmailIgnoreCase(dto.getEmail())) {
             throw new DatoDuplicadoException("El email ya esta registrado");
@@ -49,7 +54,7 @@ public class UsuarioService {
     }
 
     public AuthRespuestaDto iniciarSesion(LoginDto dto) {
-        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(dto.getEmail())
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCaseConRoles(dto.getEmail())
                 .orElseThrow(() -> new LoginRequeridoException("Credenciales incorrectas"));
 
         if (!Boolean.TRUE.equals(usuario.getActivo())) {
@@ -103,8 +108,9 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
+    @Transactional
     public void agregarRol(Integer idUsuario, NombreRol nombreRol) {
-        Usuario usuario = obtenerUsuarioPorId(idUsuario);
+        Usuario usuario = obtenerUsuarioPorIdConRoles(idUsuario);
         Rol rol = rolService.buscarPorNombre(nombreRol);
 
         usuario.getRoles().add(rol);
@@ -114,6 +120,37 @@ public class UsuarioService {
     public Usuario obtenerUsuarioPorId(Integer idUsuario) {
         return usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new IdNoEncontradoException("Usuario no encontrado"));
+    }
+
+    public Usuario obtenerUsuarioPorIdConRoles(Integer idUsuario) {
+        return usuarioRepository.findByIdConRoles(idUsuario)
+                .orElseThrow(() -> new IdNoEncontradoException("Usuario no encontrado"));
+    }
+
+    public Usuario obtenerUsuarioAutenticado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new LoginRequeridoException("Usuario no autenticado");
+        }
+
+        String email = authentication.getName();
+        return usuarioRepository.findByEmailIgnoreCaseConRoles(email)
+                .orElseThrow(() -> new LoginRequeridoException("Usuario no autenticado"));
+    }
+
+    public void validarUsuarioActualOAdministrador(Integer idUsuario, String mensaje) {
+        Usuario usuario = obtenerUsuarioAutenticado();
+
+        if (!usuario.getIdUsuario().equals(idUsuario) && !tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
+            throw new PermisoInsuficienteException(mensaje);
+        }
+    }
+
+    public boolean tieneRol(Usuario usuario, NombreRol nombreRol) {
+        return usuario.getRoles().stream()
+                .map(Rol::getNombre)
+                .anyMatch(nombreRol::equals);
     }
 
     private UsuarioRespuestaDto convertirARespuesta(Usuario usuario) {

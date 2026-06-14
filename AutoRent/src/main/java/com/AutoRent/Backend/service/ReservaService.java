@@ -6,10 +6,12 @@ import com.AutoRent.Backend.dto.reserva.ReservaDto;
 import com.AutoRent.Backend.dto.reserva.ReservaRespuestaDto;
 import com.AutoRent.Backend.exception.IdNoEncontradoException;
 import com.AutoRent.Backend.exception.ParametroIncorrectoException;
+import com.AutoRent.Backend.exception.PermisoInsuficienteException;
 import com.AutoRent.Backend.model.Auto;
 import com.AutoRent.Backend.model.Reserva;
 import com.AutoRent.Backend.model.Usuario;
 import com.AutoRent.Backend.model.enums.EstadoReserva;
+import com.AutoRent.Backend.model.enums.NombreRol;
 import com.AutoRent.Backend.repository.AutoRepository;
 import com.AutoRent.Backend.repository.ReservaRepository;
 import java.math.BigDecimal;
@@ -17,6 +19,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,10 +30,26 @@ public class ReservaService {
     private final UsuarioService usuarioService;
 
 
+    @Transactional
+    public ReservaRespuestaDto crearReservaAutenticada(ReservaDto dto) {
+        Usuario cliente = usuarioService.obtenerUsuarioAutenticado();
+        return crearReservaParaCliente(cliente, dto);
+    }
+
+    @Transactional
     public ReservaRespuestaDto crearReserva(Integer idCliente, ReservaDto dto) {
-        validarFechas(dto);
+        usuarioService.validarUsuarioActualOAdministrador(
+                idCliente,
+                "No podes crear reservas para otro usuario"
+        );
 
         Usuario cliente = usuarioService.obtenerUsuarioPorId(idCliente);
+        return crearReservaParaCliente(cliente, dto);
+    }
+
+    private ReservaRespuestaDto crearReservaParaCliente(Usuario cliente, ReservaDto dto) {
+        validarFechas(dto);
+
         Auto auto = autoRepository.findById(dto.getIdAuto())
                 .orElseThrow(() -> new IdNoEncontradoException("Auto no encontrado"));
 
@@ -59,6 +78,10 @@ public class ReservaService {
     }
 
     public List<ReservaRespuestaDto> listarReservasPorCliente(Integer idCliente) {
+        usuarioService.validarUsuarioActualOAdministrador(
+                idCliente,
+                "No podes consultar reservas de otro cliente"
+        );
         usuarioService.obtenerUsuarioPorId(idCliente);
 
         return reservaRepository.findByClienteIdUsuarioOrderByFechaInicioDesc(idCliente).stream()
@@ -66,7 +89,18 @@ public class ReservaService {
                 .toList();
     }
 
+    public List<ReservaRespuestaDto> listarMisReservas() {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        return reservaRepository.findByClienteIdUsuarioOrderByFechaInicioDesc(usuario.getIdUsuario()).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
     public List<ReservaRespuestaDto> listarReservasPorPropietario(Integer idPropietario) {
+        usuarioService.validarUsuarioActualOAdministrador(
+                idPropietario,
+                "No podes consultar reservas de otro propietario"
+        );
         usuarioService.obtenerUsuarioPorId(idPropietario);
 
         return reservaRepository.findByAutoPropietarioIdUsuarioOrderByFechaInicioDesc(idPropietario).stream()
@@ -75,6 +109,10 @@ public class ReservaService {
     }
 
     public List<ReservaRespuestaDto> listarReservasPorAutoDePropietario(Integer idPropietario, Integer idAuto) {
+        usuarioService.validarUsuarioActualOAdministrador(
+                idPropietario,
+                "No podes consultar reservas de otro propietario"
+        );
         usuarioService.obtenerUsuarioPorId(idPropietario);
 
         return reservaRepository.findByAutoPropietarioIdUsuarioAndAutoIdAutoOrderByFechaInicioDesc(
@@ -86,6 +124,8 @@ public class ReservaService {
     }
 
     public List<ReservaRespuestaDto> listarReservasPorEstado(EstadoReserva estado) {
+        validarAdministrador("Solo un administrador puede consultar reservas por estado");
+
         return reservaRepository.findByEstadoOrderByFechaReservaDesc(estado).stream()
                 .map(this::convertirARespuesta)
                 .toList();
@@ -93,18 +133,23 @@ public class ReservaService {
 
     public ReservaRespuestaDto buscarPorId(Integer idReserva) {
         Reserva reserva = obtenerReservaPorId(idReserva);
+        validarClientePropietarioOAdministrador(reserva);
         return convertirARespuesta(reserva);
     }
 
+    @Transactional
     public ReservaRespuestaDto confirmarReserva(Integer idReserva) {
         Reserva reserva = obtenerReservaPorId(idReserva);
+        validarPropietarioOAdministrador(reserva);
         validarEstadoActual(reserva, EstadoReserva.PENDIENTE, "Solo se pueden confirmar reservas pendientes");
         reserva.setEstado(EstadoReserva.CONFIRMADA);
         return convertirARespuesta(reservaRepository.save(reserva));
     }
 
+    @Transactional
     public ReservaRespuestaDto cancelarReserva(Integer idReserva) {
         Reserva reserva = obtenerReservaPorId(idReserva);
+        validarClientePropietarioOAdministrador(reserva);
         if (reserva.getEstado() == EstadoReserva.CANCELADA) {
             throw new ParametroIncorrectoException("La reserva ya esta cancelada");
         }
@@ -115,8 +160,10 @@ public class ReservaService {
         return convertirARespuesta(reservaRepository.save(reserva));
     }
 
+    @Transactional
     public ReservaRespuestaDto finalizarReserva(Integer idReserva) {
         Reserva reserva = obtenerReservaPorId(idReserva);
+        validarPropietarioOAdministrador(reserva);
         validarEstadoActual(reserva, EstadoReserva.CONFIRMADA, "Solo se pueden finalizar reservas confirmadas");
         reserva.setEstado(EstadoReserva.FINALIZADA);
         return convertirARespuesta(reservaRepository.save(reserva));
@@ -151,6 +198,7 @@ public class ReservaService {
         return auto.getPrecioDia().multiply(BigDecimal.valueOf(dias));
     }
 
+    @Transactional
     public void confirmarReservaPorPago(Reserva reserva) {
         if (reserva.getEstado() == EstadoReserva.CANCELADA) {
             throw new ParametroIncorrectoException("No se puede aprobar un pago de una reserva cancelada");
@@ -167,6 +215,36 @@ public class ReservaService {
     private void validarEstadoActual(Reserva reserva, EstadoReserva estadoEsperado, String mensaje) {
         if (reserva.getEstado() != estadoEsperado) {
             throw new ParametroIncorrectoException(mensaje);
+        }
+    }
+
+    private void validarPropietarioOAdministrador(Reserva reserva) {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        Integer idPropietario = reserva.getAuto().getPropietario().getIdUsuario();
+
+        if (!idPropietario.equals(usuario.getIdUsuario())
+                && !usuarioService.tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
+            throw new PermisoInsuficienteException("No podes modificar esta reserva");
+        }
+    }
+
+    private void validarClientePropietarioOAdministrador(Reserva reserva) {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        Integer idCliente = reserva.getCliente().getIdUsuario();
+        Integer idPropietario = reserva.getAuto().getPropietario().getIdUsuario();
+
+        if (!idCliente.equals(usuario.getIdUsuario())
+                && !idPropietario.equals(usuario.getIdUsuario())
+                && !usuarioService.tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
+            throw new PermisoInsuficienteException("No podes modificar esta reserva");
+        }
+    }
+
+    private void validarAdministrador(String mensaje) {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+
+        if (!usuarioService.tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
+            throw new PermisoInsuficienteException(mensaje);
         }
     }
 
