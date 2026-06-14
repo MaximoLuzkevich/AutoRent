@@ -20,7 +20,7 @@ public class UsuarioDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) {
-        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email)
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCaseConRoles(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         List<SimpleGrantedAuthority> authorities = usuario.getRoles().stream()
