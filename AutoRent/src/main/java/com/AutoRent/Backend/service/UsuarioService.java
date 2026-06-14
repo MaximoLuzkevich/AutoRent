@@ -90,6 +90,10 @@ public class UsuarioService {
                 .toList();
     }
 
+    public UsuarioRespuestaDto buscarMiUsuario() {
+        return convertirARespuesta(obtenerUsuarioAutenticado());
+    }
+
     public UsuarioRespuestaDto buscarPorId(Integer idUsuario) {
         Usuario usuario = obtenerUsuarioPorId(idUsuario);
         return convertirARespuesta(usuario);

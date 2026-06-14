@@ -234,6 +234,7 @@ La autorizacion restringe acciones segun los roles `CLIENTE`, `PROPIETARIO` y `A
 
 - `POST /api/usuarios/registro`: registrar usuario.
 - `POST /api/usuarios/login`: iniciar sesion y obtener token JWT.
+- `GET /api/usuarios/me`: consultar los datos y roles del usuario autenticado.
 - `GET /api/usuarios`: listar usuarios.
 - `GET /api/usuarios/{idUsuario}`: buscar usuario por ID.
 - `GET /api/usuarios/email/{email}`: buscar usuario por email.

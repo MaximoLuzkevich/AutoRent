@@ -72,6 +72,16 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listarUsuarios());
     }
 
+    @Operation(summary = "Ver mi usuario", description = "Devuelve los datos y roles del usuario autenticado mediante JWT.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usuario autenticado obtenido correctamente"),
+            @ApiResponse(responseCode = "401", description = "Token ausente o invalido")
+    })
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioRespuestaDto> buscarMiUsuario() {
+        return ResponseEntity.ok(usuarioService.buscarMiUsuario());
+    }
+
     @Operation(summary = "Buscar usuario por ID", description = "Endpoint administrativo para consultar un usuario puntual.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Usuario encontrado"),
