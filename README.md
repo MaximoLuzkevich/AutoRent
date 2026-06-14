@@ -77,13 +77,35 @@ El script incluye la creacion de tablas principales y datos iniciales para roles
 Configuracion local actual:
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/db_autoRent
-spring.datasource.username=root
-spring.datasource.password=123456789
-spring.jpa.hibernate.ddl-auto=validate
+spring.datasource.url=${DB_URL:jdbc:mysql://localhost:3306/db_autoRent}
+spring.datasource.username=${DB_USER:root}
+spring.datasource.password=${DB_PASSWORD:123456789}
+spring.jpa.hibernate.ddl-auto=${DDL_AUTO:validate}
+jwt.secret=${JWT_SECRET:AutoRentClaveSecretaParaFirmarTokensJwtCambiarEnProduccion2026}
 ```
 
 Para ejecutar el proyecto localmente, primero se debe crear la base ejecutando el script SQL en MySQL.
+
+Para despliegue se recomienda configurar variables de entorno:
+
+| Variable | Descripcion |
+|---|---|
+| `DB_URL` | URL JDBC de la base de datos MySQL |
+| `DB_USER` | Usuario de la base de datos |
+| `DB_PASSWORD` | Password de la base de datos |
+| `JWT_SECRET` | Clave secreta para firmar tokens JWT |
+| `JWT_EXPIRATION_MILLIS` | Duracion del token en milisegundos |
+| `DDL_AUTO` | Estrategia de Hibernate, por defecto `validate` |
+| `SHOW_SQL` | Mostrar SQL en consola, por defecto `false` |
+| `CORS_ALLOWED_ORIGINS` | Origenes permitidos separados por coma |
+
+El perfil de produccion se puede activar con:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=prod
+```
+
+En perfil `prod`, `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` y `CORS_ALLOWED_ORIGINS` no tienen valores por defecto. Si falta alguno, la aplicacion no deberia iniciar.
 
 ## Como ejecutar localmente
 
@@ -118,6 +140,12 @@ mvn spring-boot:run
 http://localhost:8080
 ```
 
+Si se desea usar el panel web simple incluido para probar la API:
+
+```text
+http://localhost:8080/panel.html
+```
+
 ## Swagger / OpenAPI
 
 La documentacion navegable de endpoints esta disponible en:
@@ -133,6 +161,16 @@ http://localhost:8080/v3/api-docs
 ```
 
 Swagger permite visualizar y probar los endpoints desde el navegador.
+
+La configuracion OpenAPI incluye seguridad Bearer JWT. Para probar endpoints protegidos desde Swagger:
+
+1. Iniciar sesion con `POST /api/usuarios/login`.
+2. Copiar el valor de `token`.
+3. Presionar el boton `Authorize`.
+4. Pegar el token JWT.
+5. Ejecutar endpoints protegidos.
+
+Los DTOs principales incluyen ejemplos de request y los endpoints mas importantes documentan descripcion, reglas de uso y codigos de respuesta esperados.
 
 ## Autenticacion y autorizacion
 
@@ -206,6 +244,7 @@ La autorizacion restringe acciones segun los roles `CLIENTE`, `PROPIETARIO` y `A
 ### Autos
 
 - `POST /api/autos/propietario/{idPropietario}`: publicar auto.
+- `POST /api/autos/me`: publicar auto usando el usuario autenticado.
 - `GET /api/autos`: listar autos activos.
 - `GET /api/autos/{idAuto}`: buscar auto por ID.
 - `GET /api/autos/propietario/{idPropietario}`: listar autos de un propietario.
@@ -213,36 +252,50 @@ La autorizacion restringe acciones segun los roles `CLIENTE`, `PROPIETARIO` y `A
 - `GET /api/autos/marca/{marca}`: filtrar por marca.
 - `GET /api/autos/ciudad/{ciudad}`: filtrar por ciudad.
 - `PUT /api/autos/{idAuto}/propietario/{idPropietario}`: modificar auto.
+- `PUT /api/autos/{idAuto}/me`: modificar un auto propio usando el usuario autenticado.
 - `DELETE /api/autos/{idAuto}/propietario/{idPropietario}`: desactivar auto.
+- `DELETE /api/autos/{idAuto}/me`: desactivar un auto propio usando el usuario autenticado.
 
 ### Reservas
 
 - `POST /api/reservas/cliente/{idCliente}`: crear reserva.
+- `POST /api/reservas/me`: crear reserva usando el usuario autenticado.
 - `GET /api/reservas/{idReserva}`: buscar reserva.
 - `GET /api/reservas/cliente/{idCliente}`: listar reservas de un cliente.
+- `GET /api/reservas/me`: listar reservas del usuario autenticado.
 - `GET /api/reservas/propietario/{idPropietario}`: listar reservas de autos de un propietario.
 - `GET /api/reservas/estado/{estado}`: listar reservas por estado.
 - `PUT /api/reservas/{idReserva}/confirmar`: confirmar reserva.
+- `PUT /api/reservas/{idReserva}/estado/confirmada`: confirmar reserva.
 - `PUT /api/reservas/{idReserva}/cancelar`: cancelar reserva.
+- `PUT /api/reservas/{idReserva}/estado/cancelada`: cancelar reserva.
 - `PUT /api/reservas/{idReserva}/finalizar`: finalizar reserva.
+- `PUT /api/reservas/{idReserva}/estado/finalizada`: finalizar reserva.
 
 ### Pagos
 
 - `POST /api/pagos`: registrar pago.
+- `GET /api/pagos/me`: listar pagos del usuario autenticado como cliente.
+- `GET /api/pagos/me/propietario`: listar pagos recibidos por autos del usuario autenticado como propietario.
 - `GET /api/pagos/reserva/{idReserva}`: listar pagos por reserva.
 - `GET /api/pagos/cliente/{idCliente}`: listar pagos de un cliente.
 - `GET /api/pagos/propietario/{idPropietario}`: listar pagos de un propietario.
 - `GET /api/pagos/estado/{estado}`: listar pagos por estado.
 - `GET /api/pagos/fechas/{desde}/{hasta}`: listar pagos por rango de fechas.
 - `PUT /api/pagos/{idPago}/aprobar`: aprobar pago.
+- `PUT /api/pagos/{idPago}/estado/aprobado`: aprobar pago.
 - `PUT /api/pagos/{idPago}/rechazar`: rechazar pago.
+- `PUT /api/pagos/{idPago}/estado/rechazado`: rechazar pago.
 
 ### Propietarios
 
 - `POST /api/propietarios/{idUsuario}`: crear perfil de propietario.
+- `POST /api/propietarios/me`: crear perfil de propietario para el usuario autenticado.
 - `PUT /api/propietarios/{idUsuario}`: modificar perfil.
+- `PUT /api/propietarios/me`: modificar el perfil del usuario autenticado.
 - `PUT /api/propietarios/{idUsuario}/verificar`: verificar propietario.
 - `GET /api/propietarios/{idUsuario}`: buscar perfil por usuario.
+- `GET /api/propietarios/me`: buscar el perfil del usuario autenticado.
 - `GET /api/propietarios/verificados/{verificado}`: listar por estado de verificacion.
 - `GET /api/propietarios/ciudad/{ciudad}`: filtrar por ciudad.
 - `GET /api/propietarios/provincia/{provincia}`: filtrar por provincia.
@@ -258,6 +311,7 @@ La autorizacion restringe acciones segun los roles `CLIENTE`, `PROPIETARIO` y `A
 ### Reviews
 
 - `POST /api/reviews/cliente/{idCliente}`: crear review.
+- `POST /api/reviews/me`: crear review usando el usuario autenticado.
 - `GET /api/reviews`: listar reviews.
 - `GET /api/reviews/{idReview}`: buscar review por ID.
 - `GET /api/reviews/auto/{idAuto}`: listar reviews de un auto.
@@ -354,9 +408,15 @@ Tambien cuenta con excepciones personalizadas y un `GlobalExceptionHandler` para
 - No se pueden cancelar reservas `FINALIZADA`.
 - Los pagos manejan estados como `PENDIENTE`, `APROBADO` y `RECHAZADO`.
 - El monto de un pago debe coincidir con el total de la reserva.
+- Un cliente solo puede pagar reservas propias.
+- Cliente, propietario y administrador solo pueden consultar pagos que les correspondan, salvo reportes administrativos.
 - No puede registrarse mas de un pago pendiente o aprobado para la misma reserva.
 - Solo se pueden aprobar o rechazar pagos `PENDIENTE`.
 - Al aprobar un pago valido, la reserva queda `CONFIRMADA` si estaba `PENDIENTE`.
+- Un cliente solo puede crear reviews sobre autos que tuvo en reservas `FINALIZADA`.
+- Los endpoints recomendados con `/me` usan el usuario autenticado por JWT y evitan confiar en IDs enviados por URL.
+- Solo el propietario de un auto o un administrador puede modificar sus datos o imagenes.
+- Solo el autor de una review o un administrador puede eliminarla.
 
 ## Tests
 
@@ -366,13 +426,48 @@ El proyecto incluye una prueba de carga de contexto:
 AutoRent/src/test/java/com/AutoRent/AutoRentApplicationTests.java
 ```
 
+Tambien incluye tests unitarios de services para reglas de negocio importantes:
+
+- Login con password incorrecta.
+- Reserva de auto propio.
+- Pago con monto distinto al total de la reserva.
+- Pago de una reserva ajena.
+- Aprobacion de pago sin rol administrador.
+- Consulta de pagos de otro propietario.
+- Consulta de reserva ajena.
+- Reserva superpuesta para un auto.
+- Email duplicado al registrar usuario.
+- Login correcto con generacion de token.
+- Patente duplicada al publicar auto.
+- Modificacion de auto ajeno.
+- Review sin reserva finalizada.
+- Eliminacion de review ajena.
+
 Para ejecutar los tests:
 
 ```bash
 mvn test
 ```
 
-Actualmente esta pendiente ampliar la cobertura con tests unitarios o de integracion para reglas clave como login, reservas superpuestas, email duplicado y patente duplicada.
+Los tests usan el perfil `test` con una base H2 en memoria, por lo que no dependen de tener MySQL local levantado. Actualmente queda pendiente ampliar la cobertura con mas casos de integracion, por ejemplo reservas superpuestas, email duplicado y patente duplicada.
+
+## Usuarios de prueba
+
+El script `db_autoRent.sql` incluye usuarios de prueba para facilitar la correccion y la defensa.
+
+Todos usan la password:
+
+```text
+123456
+```
+
+| Rol principal | Email | Password |
+|---|---|---|
+| Cliente | `cliente@test.com` | `123456` |
+| Propietario | `propietario@test.com` | `123456` |
+| Administrador | `admin@test.com` | `123456` |
+
+El script tambien crea un perfil de propietario verificado y un auto demo con patente `DEMO123`.
 
 ## Despliegue
 
@@ -387,16 +482,25 @@ URL de la API desplegada: pendiente
 Swagger desplegado: pendiente
 ```
 
+Checklist para completar el despliegue:
+
+- Crear una base de datos MySQL remota.
+- Configurar `SPRING_PROFILES_ACTIVE=prod`.
+- Configurar `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` y `CORS_ALLOWED_ORIGINS`.
+- Ejecutar el script `db_autoRent.sql` sobre la base remota.
+- Verificar `/swagger-ui.html` en la URL publica.
+- Probar login y un endpoint protegido con token.
+
 ## Integrantes
 
 Pendiente de completar con los integrantes del grupo.
 
 ```text
-- Integrante 1:
-- Integrante 2:
-- Integrante 3:
-- Integrante 4:
-- Integrante 5:
+- Nombre Apellido:
+- Nombre Apellido:
+- Nombre Apellido:
+- Nombre Apellido:
+- Nombre Apellido:
 ```
 
 ## Aclaraciones para la correccion
@@ -406,4 +510,4 @@ Pendiente de completar con los integrantes del grupo.
 - La autenticacion se realiza mediante JWT.
 - La autorizacion se basa en roles.
 - El script SQL contiene la estructura de base de datos y datos iniciales.
-- Algunas mejoras pendientes recomendadas son ampliar tests, completar despliegue y documentar usuarios de prueba definitivos.
+- Algunas mejoras pendientes recomendadas son ampliar tests y completar el despliegue.
