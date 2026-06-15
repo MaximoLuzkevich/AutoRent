@@ -16,17 +16,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("AutoRent API")
-                        .description("""
-                                API REST para una plataforma de alquiler de autos.
-
-                                Flujo recomendado:
-                                1. Registrar usuario o iniciar sesion.
-                                2. Copiar el token JWT devuelto por /api/usuarios/login.
-                                3. Usar el boton Authorize con el formato Bearer JWT.
-                                4. Probar endpoints protegidos segun el rol: CLIENTE, PROPIETARIO o ADMINISTRADOR.
-
-                                Los endpoints /me usan el usuario autenticado y son los recomendados para operaciones propias.
-                                """)
+                        .description("API REST para alquiler de autos")
                         .version("1.0"))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()

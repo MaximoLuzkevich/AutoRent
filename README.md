@@ -99,14 +99,6 @@ Para despliegue se recomienda configurar variables de entorno:
 | `SHOW_SQL` | Mostrar SQL en consola, por defecto `false` |
 | `CORS_ALLOWED_ORIGINS` | Origenes permitidos separados por coma |
 
-El perfil de produccion se puede activar con:
-
-```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=prod
-```
-
-En perfil `prod`, `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` y `CORS_ALLOWED_ORIGINS` no tienen valores por defecto. Si falta alguno, la aplicacion no deberia iniciar.
-
 ## Como ejecutar localmente
 
 1. Clonar el repositorio:
@@ -170,8 +162,6 @@ La configuracion OpenAPI incluye seguridad Bearer JWT. Para probar endpoints pro
 4. Pegar el token JWT.
 5. Ejecutar endpoints protegidos.
 
-Los DTOs principales incluyen ejemplos de request y los endpoints mas importantes documentan descripcion, reglas de uso y codigos de respuesta esperados.
-
 ## Autenticacion y autorizacion
 
 El sistema usa Spring Security con JWT.
@@ -234,7 +224,10 @@ La autorizacion restringe acciones segun los roles `CLIENTE`, `PROPIETARIO` y `A
 
 - `POST /api/usuarios/registro`: registrar usuario.
 - `POST /api/usuarios/login`: iniciar sesion y obtener token JWT.
+- `POST /api/usuarios/logout`: cerrar sesion del lado del cliente eliminando el token JWT.
 - `GET /api/usuarios/me`: consultar los datos y roles del usuario autenticado.
+- `PUT /api/usuarios/me`: modificar nombre, email y telefono del usuario autenticado.
+- `DELETE /api/usuarios/me`: dar de baja el usuario autenticado.
 - `GET /api/usuarios`: listar usuarios.
 - `GET /api/usuarios/{idUsuario}`: buscar usuario por ID.
 - `GET /api/usuarios/email/{email}`: buscar usuario por email.
@@ -247,6 +240,11 @@ La autorizacion restringe acciones segun los roles `CLIENTE`, `PROPIETARIO` y `A
 - `POST /api/autos/propietario/{idPropietario}`: publicar auto.
 - `POST /api/autos/me`: publicar auto usando el usuario autenticado.
 - `GET /api/autos`: listar autos activos.
+- `GET /api/autos/filtrar`: filtrar autos por ciudad, marca, categoria, precio maximo, pasajeros, transmision o combustible.
+- `GET /api/autos/disponibles`: buscar autos disponibles por ciudad, fecha de inicio y fecha de fin.
+- `GET /api/autos/me`: listar autos publicados por el propietario autenticado.
+- `GET /api/autos/me/estado/{activo}`: listar autos propios activos o inactivos.
+- `GET /api/autos/me/categoria/{categoria}`: listar autos propios por categoria.
 - `GET /api/autos/{idAuto}`: buscar auto por ID.
 - `GET /api/autos/propietario/{idPropietario}`: listar autos de un propietario.
 - `GET /api/autos/categoria/{categoria}`: filtrar por categoria.
@@ -264,6 +262,9 @@ La autorizacion restringe acciones segun los roles `CLIENTE`, `PROPIETARIO` y `A
 - `GET /api/reservas/{idReserva}`: buscar reserva.
 - `GET /api/reservas/cliente/{idCliente}`: listar reservas de un cliente.
 - `GET /api/reservas/me`: listar reservas del usuario autenticado.
+- `GET /api/reservas/me/estado/{estado}`: listar reservas propias por estado.
+- `GET /api/reservas/me/fechas/{desde}/{hasta}`: listar reservas propias por rango de fechas.
+- `GET /api/reservas/me/propietario/pendientes`: listar reservas pendientes recibidas por autos propios.
 - `GET /api/reservas/propietario/{idPropietario}`: listar reservas de autos de un propietario.
 - `GET /api/reservas/estado/{estado}`: listar reservas por estado.
 - `PUT /api/reservas/{idReserva}/confirmar`: confirmar reserva.
@@ -276,6 +277,7 @@ La autorizacion restringe acciones segun los roles `CLIENTE`, `PROPIETARIO` y `A
 ### Pagos
 
 - `POST /api/pagos`: registrar pago.
+- `GET /api/pagos`: listar todos los pagos, solo administrador.
 - `GET /api/pagos/me`: listar pagos del usuario autenticado como cliente.
 - `GET /api/pagos/me/propietario`: listar pagos recibidos por autos del usuario autenticado como propietario.
 - `GET /api/pagos/reserva/{idReserva}`: listar pagos por reserva.
@@ -294,10 +296,13 @@ La autorizacion restringe acciones segun los roles `CLIENTE`, `PROPIETARIO` y `A
 - `POST /api/propietarios/me`: crear perfil de propietario para el usuario autenticado.
 - `PUT /api/propietarios/{idUsuario}`: modificar perfil.
 - `PUT /api/propietarios/me`: modificar el perfil del usuario autenticado.
+- `DELETE /api/propietarios/{idUsuario}`: dar de baja un perfil de propietario.
+- `DELETE /api/propietarios/me`: dar de baja el perfil de propietario del usuario autenticado.
 - `PUT /api/propietarios/{idUsuario}/verificar`: verificar propietario.
 - `GET /api/propietarios/{idUsuario}`: buscar perfil por usuario.
 - `GET /api/propietarios/me`: buscar el perfil del usuario autenticado.
 - `GET /api/propietarios/verificados/{verificado}`: listar por estado de verificacion.
+- `GET /api/propietarios/activos/{activo}`: listar propietarios activos o dados de baja.
 - `GET /api/propietarios/ciudad/{ciudad}`: filtrar por ciudad.
 - `GET /api/propietarios/provincia/{provincia}`: filtrar por provincia.
 - `GET /api/propietarios/nombre/{nombre}`: filtrar por nombre de usuario.
@@ -359,6 +364,14 @@ Content-Type: application/json
 }
 ```
 
+### Buscar autos disponibles
+
+```http
+GET /api/autos/disponibles?ciudad=Cordoba&fechaInicio=2026-07-01&fechaFin=2026-07-05
+```
+
+Tambien se pueden sumar filtros opcionales como `precioMax`, `pasajeros`, `categoria`, `transmision`, `combustible` o `marca`.
+
 ### Registrar pago
 
 ```http
@@ -371,9 +384,27 @@ Content-Type: application/json
 {
   "idReserva": 1,
   "monto": 40000,
-  "metodoPago": "TARJETA"
+  "metodoPago": "TARJETA",
+  "titularTarjeta": "Cliente Demo",
+  "numeroTarjeta": "4509953566233704",
+  "vencimientoTarjeta": "12/28",
+  "codigoSeguridad": "123"
 }
 ```
+
+Los datos de tarjeta se validan para simular el pago, pero no se guardan como datos sensibles en la base.
+
+Para simular Mercado Pago:
+
+```json
+{
+  "idReserva": 1,
+  "monto": 40000,
+  "metodoPago": "MERCADO_PAGO"
+}
+```
+
+La respuesta incluye un `linkPago` simulado para representar el enlace de pago.
 
 ## Validaciones y manejo de errores
 
@@ -397,8 +428,10 @@ Tambien cuenta con excepciones personalizadas y un `GlobalExceptionHandler` para
 - Un usuario nuevo se registra como `CLIENTE`.
 - Las passwords se guardan encriptadas con BCrypt.
 - Solo usuarios con rol `PROPIETARIO` o `ADMINISTRADOR` pueden publicar autos.
+- Al dar de baja un perfil de propietario, se desactiva el perfil y se quita el rol `PROPIETARIO`.
 - No puede registrarse un email duplicado.
 - No puede registrarse una patente duplicada.
+- La busqueda de autos disponibles valida ciudad y fechas.
 - No puede crearse una reserva si la fecha de fin no es posterior a la fecha de inicio.
 - No puede crearse una reserva con fecha de inicio anterior al dia actual.
 - No puede crearse una reserva si ya existe otra reserva superpuesta para el mismo auto.
@@ -410,6 +443,8 @@ Tambien cuenta con excepciones personalizadas y un `GlobalExceptionHandler` para
 - Los pagos manejan estados como `PENDIENTE`, `APROBADO` y `RECHAZADO`.
 - El monto de un pago debe coincidir con el total de la reserva.
 - Un cliente solo puede pagar reservas propias.
+- Los pagos con tarjeta requieren datos basicos de tarjeta, pero esos datos no se guardan.
+- Los pagos con Mercado Pago devuelven un link de pago simulado.
 - Cliente, propietario y administrador solo pueden consultar pagos que les correspondan, salvo reportes administrativos.
 - No puede registrarse mas de un pago pendiente o aprobado para la misma reserva.
 - Solo se pueden aprobar o rechazar pagos `PENDIENTE`.
@@ -433,6 +468,8 @@ Tambien incluye tests unitarios de services para reglas de negocio importantes:
 - Reserva de auto propio.
 - Pago con monto distinto al total de la reserva.
 - Pago de una reserva ajena.
+- Pago con tarjeta sin datos obligatorios.
+- Pago con Mercado Pago y link simulado.
 - Aprobacion de pago sin rol administrador.
 - Consulta de pagos de otro propietario.
 - Consulta de reserva ajena.
@@ -440,6 +477,7 @@ Tambien incluye tests unitarios de services para reglas de negocio importantes:
 - Email duplicado al registrar usuario.
 - Login correcto con generacion de token.
 - Patente duplicada al publicar auto.
+- Busqueda de autos disponibles con fechas invalidas.
 - Modificacion de auto ajeno.
 - Review sin reserva finalizada.
 - Eliminacion de review ajena.
@@ -450,7 +488,7 @@ Para ejecutar los tests:
 mvn test
 ```
 
-Los tests usan el perfil `test` con una base H2 en memoria, por lo que no dependen de tener MySQL local levantado. Actualmente queda pendiente ampliar la cobertura con mas casos de integracion, por ejemplo reservas superpuestas, email duplicado y patente duplicada.
+Los tests usan el perfil `test` con una base H2 en memoria, por lo que no dependen de tener MySQL local levantado. Actualmente queda pendiente ampliar la cobertura con mas casos de integracion.
 
 ## Usuarios de prueba
 
@@ -486,7 +524,6 @@ Swagger desplegado: pendiente
 Checklist para completar el despliegue:
 
 - Crear una base de datos MySQL remota.
-- Configurar `SPRING_PROFILES_ACTIVE=prod`.
 - Configurar `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` y `CORS_ALLOWED_ORIGINS`.
 - Ejecutar el script `db_autoRent.sql` sobre la base remota.
 - Verificar `/swagger-ui.html` en la URL publica.
