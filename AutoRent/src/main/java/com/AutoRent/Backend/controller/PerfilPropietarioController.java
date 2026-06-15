@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 import com.AutoRent.Backend.dto.perfilpropietario.PerfilPropietarioDto;
 import com.AutoRent.Backend.dto.perfilpropietario.PerfilPropietarioRespuestaDto;
 import com.AutoRent.Backend.service.PerfilPropietarioService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/propietarios")
-@Tag(name = "Propietarios")
 @RequiredArgsConstructor
 public class PerfilPropietarioController {
 
@@ -56,6 +55,18 @@ public class PerfilPropietarioController {
         return ResponseEntity.ok(perfilPropietarioService.modificarMiPerfil(dto));
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> desactivarMiPerfil() {
+        perfilPropietarioService.desactivarMiPerfil();
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{idUsuario}")
+    public ResponseEntity<Void> desactivarPerfil(@PathVariable Integer idUsuario) {
+        perfilPropietarioService.desactivarPerfil(idUsuario);
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/{idUsuario}/verificar")
     public ResponseEntity<PerfilPropietarioRespuestaDto> verificarPropietario(@PathVariable Integer idUsuario) {
         return ResponseEntity.ok(perfilPropietarioService.verificarPropietario(idUsuario));
@@ -76,6 +87,11 @@ public class PerfilPropietarioController {
             @PathVariable Boolean verificado
     ) {
         return ResponseEntity.ok(perfilPropietarioService.listarPorVerificado(verificado));
+    }
+
+    @GetMapping("/activos/{activo}")
+    public ResponseEntity<List<PerfilPropietarioRespuestaDto>> listarPorActivo(@PathVariable Boolean activo) {
+        return ResponseEntity.ok(perfilPropietarioService.listarPorActivo(activo));
     }
 
     @GetMapping("/ciudad/{ciudad}")

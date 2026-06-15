@@ -20,4 +20,5 @@ public class PerfilPropietarioRespuestaDto {
     private String provincia;
     private LocalDateTime fechaAlta;
     private Boolean verificado;
+    private Boolean activo;
 }

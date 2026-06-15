@@ -11,6 +11,7 @@ import com.AutoRent.Backend.model.Pago;
 import com.AutoRent.Backend.model.Reserva;
 import com.AutoRent.Backend.model.enums.EstadoPago;
 import com.AutoRent.Backend.model.enums.EstadoReserva;
+import com.AutoRent.Backend.model.enums.MetodoPago;
 import com.AutoRent.Backend.model.enums.NombreRol;
 import com.AutoRent.Backend.repository.PagoRepository;
 import java.math.BigDecimal;
@@ -35,6 +36,7 @@ public class PagoService {
         validarClienteDeReserva(reserva, "No podes pagar una reserva de otro cliente");
         validarReservaPuedePagarse(reserva);
         validarMonto(reserva, dto.getMonto());
+        validarDatosMetodoPago(dto);
 
         if (pagoRepository.existsByReservaIdReservaAndEstado(reserva.getIdReserva(), EstadoPago.APROBADO)) {
             throw new ParametroIncorrectoException("La reserva ya tiene un pago aprobado");
@@ -74,6 +76,14 @@ public class PagoService {
         Integer idUsuario = usuarioService.obtenerUsuarioAutenticado().getIdUsuario();
 
         return pagoRepository.findByReservaAutoPropietarioIdUsuarioOrderByFechaPagoDesc(idUsuario).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
+    public List<PagoRespuestaDto> listarTodosLosPagos() {
+        validarAdministrador("Solo un administrador puede consultar todos los pagos");
+
+        return pagoRepository.findAllByOrderByFechaPagoDesc().stream()
                 .map(this::convertirARespuesta)
                 .toList();
     }
@@ -162,7 +172,8 @@ public class PagoService {
                 pago.getMetodoPago(),
                 pago.getEstado(),
                 pago.getFechaPago(),
-                pago.getReserva().getIdReserva()
+                pago.getReserva().getIdReserva(),
+                generarLinkPago(pago)
         );
     }
 
@@ -179,6 +190,51 @@ public class PagoService {
         if (monto.compareTo(reserva.getPrecioTotal()) != 0) {
             throw new ParametroIncorrectoException("El monto del pago debe coincidir con el total de la reserva");
         }
+    }
+
+    private void validarDatosMetodoPago(PagoDto dto) {
+        if (dto.getMetodoPago() != MetodoPago.TARJETA) {
+            return;
+        }
+
+        if (estaVacio(dto.getTitularTarjeta())) {
+            throw new ParametroIncorrectoException("El titular de la tarjeta es obligatorio");
+        }
+
+        String numero = normalizarNumeroTarjeta(dto.getNumeroTarjeta());
+        if (!numero.matches("\\d{13,19}")) {
+            throw new ParametroIncorrectoException("El numero de tarjeta debe tener entre 13 y 19 digitos");
+        }
+
+        if (estaVacio(dto.getVencimientoTarjeta())
+                || !dto.getVencimientoTarjeta().matches("(0[1-9]|1[0-2])/(\\d{2}|\\d{4})")) {
+            throw new ParametroIncorrectoException("El vencimiento debe tener formato MM/AA o MM/AAAA");
+        }
+
+        if (estaVacio(dto.getCodigoSeguridad()) || !dto.getCodigoSeguridad().matches("\\d{3,4}")) {
+            throw new ParametroIncorrectoException("El codigo de seguridad debe tener 3 o 4 digitos");
+        }
+    }
+
+    private String generarLinkPago(Pago pago) {
+        if (pago.getMetodoPago() != MetodoPago.MERCADO_PAGO) {
+            return null;
+        }
+
+        Integer idPago = pago.getIdPago();
+        String referencia = idPago == null ? "pendiente" : idPago.toString();
+        return "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=autorent-" + referencia;
+    }
+
+    private boolean estaVacio(String texto) {
+        return texto == null || texto.isBlank();
+    }
+
+    private String normalizarNumeroTarjeta(String numeroTarjeta) {
+        if (numeroTarjeta == null) {
+            return "";
+        }
+        return numeroTarjeta.replace(" ", "").replace("-", "");
     }
 
     private void validarPagoPendiente(Pago pago) {

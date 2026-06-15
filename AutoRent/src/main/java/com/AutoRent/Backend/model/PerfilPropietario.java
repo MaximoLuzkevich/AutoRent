@@ -51,6 +51,9 @@ public class PerfilPropietario {
     @Column(nullable = false)
     private Boolean verificado;
 
+    @Column(nullable = false)
+    private Boolean activo;
+
     @OneToOne
     @MapsId
     @JoinColumn(name = "id_usuario")
@@ -63,6 +66,9 @@ public class PerfilPropietario {
         }
         if (verificado == null) {
             verificado = false;
+        }
+        if (activo == null) {
+            activo = true;
         }
     }
 }

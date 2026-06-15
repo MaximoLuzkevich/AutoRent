@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PagoRepository extends JpaRepository<Pago, Integer> {
 
+    List<Pago> findAllByOrderByFechaPagoDesc();
+
     List<Pago> findByReservaIdReservaOrderByFechaPagoDesc(Integer idReserva);
 
     List<Pago> findByReservaClienteIdUsuarioOrderByFechaPagoDesc(Integer idCliente);

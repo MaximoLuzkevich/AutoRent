@@ -43,7 +43,15 @@ public class PerfilPropietarioService {
         Integer idUsuario = usuario.getIdUsuario();
 
         if (perfilPropietarioRepository.existsById(idUsuario)) {
-            throw new DatoDuplicadoException("El usuario ya tiene perfil de propietario");
+            PerfilPropietario perfilExistente = obtenerPerfilPorUsuario(idUsuario);
+            if (Boolean.TRUE.equals(perfilExistente.getActivo())) {
+                throw new DatoDuplicadoException("El usuario ya tiene perfil de propietario");
+            }
+
+            cargarDatosPerfil(perfilExistente, dto);
+            perfilExistente.setActivo(true);
+            usuarioService.agregarRol(idUsuario, NombreRol.PROPIETARIO);
+            return convertirARespuesta(perfilPropietarioRepository.save(perfilExistente));
         }
 
         PerfilPropietario perfil = new PerfilPropietario();
@@ -80,6 +88,26 @@ public class PerfilPropietarioService {
         return convertirARespuesta(perfilPropietarioRepository.save(perfil));
     }
 
+    @Transactional
+    public void desactivarMiPerfil() {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        desactivarPerfil(usuario.getIdUsuario());
+    }
+
+    @Transactional
+    public void desactivarPerfil(Integer idUsuario) {
+        usuarioService.validarUsuarioActualOAdministrador(
+                idUsuario,
+                "No podes dar de baja el perfil de otro usuario"
+        );
+
+        PerfilPropietario perfil = obtenerPerfilPorUsuario(idUsuario);
+        perfil.setActivo(false);
+        perfil.setVerificado(false);
+        perfilPropietarioRepository.save(perfil);
+        usuarioService.quitarRol(idUsuario, NombreRol.PROPIETARIO);
+    }
+
     public PerfilPropietarioRespuestaDto buscarPorUsuario(Integer idUsuario) {
         usuarioService.validarUsuarioActualOAdministrador(
                 idUsuario,
@@ -96,6 +124,12 @@ public class PerfilPropietarioService {
 
     public List<PerfilPropietarioRespuestaDto> listarPorVerificado(Boolean verificado) {
         return perfilPropietarioRepository.findByVerificadoOrderByFechaAltaDesc(verificado).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
+    public List<PerfilPropietarioRespuestaDto> listarPorActivo(Boolean activo) {
+        return perfilPropietarioRepository.findByActivoOrderByFechaAltaDesc(activo).stream()
                 .map(this::convertirARespuesta)
                 .toList();
     }
@@ -144,7 +178,8 @@ public class PerfilPropietarioService {
                 perfil.getCiudad(),
                 perfil.getProvincia(),
                 perfil.getFechaAlta(),
-                perfil.getVerificado()
+                perfil.getVerificado(),
+                perfil.getActivo()
         );
     }
 }
