@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import com.AutoRent.Backend.model.Rol;
 import com.AutoRent.Backend.model.enums.NombreRol;
 import com.AutoRent.Backend.service.RolService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/roles")
-@Tag(name = "Roles")
 @RequiredArgsConstructor
 public class RolController {
 
