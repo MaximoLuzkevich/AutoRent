@@ -2,18 +2,16 @@ package com.AutoRent.Backend.controller;
 
 import lombok.RequiredArgsConstructor;
 
+import com.AutoRent.Backend.dto.usuario.ActualizarUsuarioDto;
 import com.AutoRent.Backend.dto.usuario.AuthRespuestaDto;
 import com.AutoRent.Backend.dto.usuario.LoginDto;
 import com.AutoRent.Backend.dto.usuario.RegistroUsuarioDto;
 import com.AutoRent.Backend.dto.usuario.UsuarioRespuestaDto;
 import com.AutoRent.Backend.model.enums.NombreRol;
 import com.AutoRent.Backend.service.UsuarioService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,68 +24,48 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/usuarios")
-@Tag(name = "Usuarios")
 @RequiredArgsConstructor
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
 
-    @Operation(
-            summary = "Registrar usuario",
-            description = "Crea un usuario nuevo con rol CLIENTE. No permite emails duplicados."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Usuario registrado correctamente"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
-            @ApiResponse(responseCode = "409", description = "Email ya registrado")
-    })
     @PostMapping("/registro")
     public ResponseEntity<UsuarioRespuestaDto> registrarUsuario(@Valid @RequestBody RegistroUsuarioDto dto) {
         return ResponseEntity.ok(usuarioService.registrarUsuario(dto));
     }
 
-    @Operation(
-            summary = "Iniciar sesion",
-            description = "Valida email y password. Si las credenciales son correctas, devuelve un token JWT Bearer."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Login correcto"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
-            @ApiResponse(responseCode = "401", description = "Credenciales incorrectas o usuario inactivo")
-    })
     @PostMapping("/login")
     public ResponseEntity<AuthRespuestaDto> iniciarSesion(@Valid @RequestBody LoginDto dto) {
         return ResponseEntity.ok(usuarioService.iniciarSesion(dto));
     }
 
-    @Operation(summary = "Listar usuarios", description = "Endpoint administrativo para consultar todos los usuarios.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Usuarios obtenidos correctamente"),
-            @ApiResponse(responseCode = "401", description = "Token ausente o invalido"),
-            @ApiResponse(responseCode = "403", description = "Requiere rol ADMINISTRADOR")
-    })
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> cerrarSesion() {
+        return ResponseEntity.ok(Map.of("mensaje", "Sesion cerrada. El cliente debe eliminar el token JWT."));
+    }
+
     @GetMapping
     public ResponseEntity<List<UsuarioRespuestaDto>> listarUsuarios() {
         return ResponseEntity.ok(usuarioService.listarUsuarios());
     }
 
-    @Operation(summary = "Ver mi usuario", description = "Devuelve los datos y roles del usuario autenticado mediante JWT.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Usuario autenticado obtenido correctamente"),
-            @ApiResponse(responseCode = "401", description = "Token ausente o invalido")
-    })
     @GetMapping("/me")
     public ResponseEntity<UsuarioRespuestaDto> buscarMiUsuario() {
         return ResponseEntity.ok(usuarioService.buscarMiUsuario());
     }
 
-    @Operation(summary = "Buscar usuario por ID", description = "Endpoint administrativo para consultar un usuario puntual.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Usuario encontrado"),
-            @ApiResponse(responseCode = "403", description = "Requiere rol ADMINISTRADOR"),
-            @ApiResponse(responseCode = "404", description = "Usuario inexistente")
-    })
+    @PutMapping("/me")
+    public ResponseEntity<UsuarioRespuestaDto> actualizarMiUsuario(@Valid @RequestBody ActualizarUsuarioDto dto) {
+        return ResponseEntity.ok(usuarioService.actualizarMiUsuario(dto));
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> desactivarMiUsuario() {
+        usuarioService.desactivarMiUsuario();
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{idUsuario}")
     public ResponseEntity<UsuarioRespuestaDto> buscarPorId(@PathVariable Integer idUsuario) {
         return ResponseEntity.ok(usuarioService.buscarPorId(idUsuario));
@@ -111,24 +89,12 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listarPorRolYEstado(rol, activo));
     }
 
-    @Operation(summary = "Desactivar usuario", description = "Marca un usuario como inactivo sin borrarlo fisicamente.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Usuario desactivado"),
-            @ApiResponse(responseCode = "403", description = "Requiere rol ADMINISTRADOR"),
-            @ApiResponse(responseCode = "404", description = "Usuario inexistente")
-    })
     @DeleteMapping("/{idUsuario}")
     public ResponseEntity<Void> desactivarUsuario(@PathVariable Integer idUsuario) {
         usuarioService.desactivarUsuario(idUsuario);
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Agregar rol a usuario", description = "Permite que un administrador agregue CLIENTE, PROPIETARIO o ADMINISTRADOR a un usuario.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Rol agregado"),
-            @ApiResponse(responseCode = "403", description = "Requiere rol ADMINISTRADOR"),
-            @ApiResponse(responseCode = "404", description = "Usuario o rol inexistente")
-    })
     @PutMapping("/{idUsuario}/roles/{rol}")
     public ResponseEntity<Void> agregarRol(@PathVariable Integer idUsuario, @PathVariable NombreRol rol) {
         usuarioService.agregarRol(idUsuario, rol);

@@ -5,13 +5,14 @@ import lombok.RequiredArgsConstructor;
 import com.AutoRent.Backend.dto.auto.AutoDto;
 import com.AutoRent.Backend.dto.auto.AutoRespuestaDto;
 import com.AutoRent.Backend.model.enums.NombreCategoriaAuto;
+import com.AutoRent.Backend.model.enums.TipoCombustible;
+import com.AutoRent.Backend.model.enums.TipoTransmision;
 import com.AutoRent.Backend.service.AutoService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,31 +21,22 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/autos")
-@Tag(name = "Autos")
 @RequiredArgsConstructor
 public class AutoController {
 
     private final AutoService autoService;
 
 
-    @Operation(summary = "Publicar mi auto", description = "Publica un auto usando el usuario autenticado como propietario.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Auto publicado"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
-            @ApiResponse(responseCode = "401", description = "Token ausente o invalido"),
-            @ApiResponse(responseCode = "403", description = "El usuario no puede publicar autos"),
-            @ApiResponse(responseCode = "409", description = "Patente duplicada")
-    })
     @PostMapping("/me")
     public ResponseEntity<AutoRespuestaDto> crearMiAuto(@Valid @RequestBody AutoDto dto) {
         return ResponseEntity.ok(autoService.crearAutoAutenticado(dto));
     }
 
-    @Operation(summary = "Publicar auto para propietario", description = "Publica un auto indicando el ID del propietario. Recomendado solo para administracion.")
     @PostMapping("/propietario/{idPropietario}")
     public ResponseEntity<AutoRespuestaDto> crearAuto(
             @PathVariable Integer idPropietario,
@@ -53,18 +45,74 @@ public class AutoController {
         return ResponseEntity.ok(autoService.crearAuto(idPropietario, dto));
     }
 
-    @Operation(summary = "Listar autos activos", description = "Endpoint publico para consultar autos disponibles.")
-    @ApiResponse(responseCode = "200", description = "Autos obtenidos correctamente")
     @GetMapping
     public ResponseEntity<List<AutoRespuestaDto>> listarAutosActivos() {
         return ResponseEntity.ok(autoService.listarAutosActivos());
     }
 
-    @Operation(summary = "Buscar auto por ID", description = "Endpoint publico para ver el detalle de un auto.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Auto encontrado"),
-            @ApiResponse(responseCode = "404", description = "Auto inexistente")
-    })
+    @GetMapping("/filtrar")
+    public ResponseEntity<List<AutoRespuestaDto>> buscarConFiltros(
+            @RequestParam(required = false) String ciudad,
+            @RequestParam(required = false) String marca,
+            @RequestParam(required = false) NombreCategoriaAuto categoria,
+            @RequestParam(required = false) BigDecimal precioMax,
+            @RequestParam(required = false) Integer pasajeros,
+            @RequestParam(required = false) TipoTransmision transmision,
+            @RequestParam(required = false) TipoCombustible combustible
+    ) {
+        return ResponseEntity.ok(autoService.buscarConFiltros(
+                ciudad,
+                marca,
+                categoria,
+                precioMax,
+                pasajeros,
+                transmision,
+                combustible
+        ));
+    }
+
+    @GetMapping("/disponibles")
+    public ResponseEntity<List<AutoRespuestaDto>> buscarDisponibles(
+            @RequestParam String ciudad,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
+            @RequestParam(required = false) String marca,
+            @RequestParam(required = false) NombreCategoriaAuto categoria,
+            @RequestParam(required = false) BigDecimal precioMax,
+            @RequestParam(required = false) Integer pasajeros,
+            @RequestParam(required = false) TipoTransmision transmision,
+            @RequestParam(required = false) TipoCombustible combustible
+    ) {
+        return ResponseEntity.ok(autoService.buscarDisponibles(
+                ciudad,
+                fechaInicio,
+                fechaFin,
+                marca,
+                categoria,
+                precioMax,
+                pasajeros,
+                transmision,
+                combustible
+        ));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<AutoRespuestaDto>> listarMisAutos() {
+        return ResponseEntity.ok(autoService.listarMisAutos());
+    }
+
+    @GetMapping("/me/estado/{activo}")
+    public ResponseEntity<List<AutoRespuestaDto>> listarMisAutosPorEstado(@PathVariable Boolean activo) {
+        return ResponseEntity.ok(autoService.listarMisAutosPorEstado(activo));
+    }
+
+    @GetMapping("/me/categoria/{categoria}")
+    public ResponseEntity<List<AutoRespuestaDto>> listarMisAutosPorCategoria(
+            @PathVariable NombreCategoriaAuto categoria
+    ) {
+        return ResponseEntity.ok(autoService.listarMisAutosPorCategoria(categoria));
+    }
+
     @GetMapping("/{idAuto}")
     public ResponseEntity<AutoRespuestaDto> buscarPorId(@PathVariable Integer idAuto) {
         return ResponseEntity.ok(autoService.buscarPorId(idAuto));
@@ -90,14 +138,6 @@ public class AutoController {
         return ResponseEntity.ok(autoService.listarPorCiudad(ciudad));
     }
 
-    @Operation(summary = "Modificar auto", description = "Modifica un auto validando que pertenezca al propietario indicado o al administrador.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Auto modificado"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
-            @ApiResponse(responseCode = "403", description = "No puede modificar este auto"),
-            @ApiResponse(responseCode = "404", description = "Auto inexistente"),
-            @ApiResponse(responseCode = "409", description = "Patente duplicada")
-    })
     @PutMapping("/{idAuto}/propietario/{idPropietario}")
     public ResponseEntity<AutoRespuestaDto> modificarAuto(
             @PathVariable Integer idAuto,
@@ -107,7 +147,6 @@ public class AutoController {
         return ResponseEntity.ok(autoService.modificarAuto(idAuto, idPropietario, dto));
     }
 
-    @Operation(summary = "Modificar mi auto", description = "Modifica un auto propio usando el usuario autenticado.")
     @PutMapping("/{idAuto}/me")
     public ResponseEntity<AutoRespuestaDto> modificarMiAuto(
             @PathVariable Integer idAuto,
@@ -116,12 +155,6 @@ public class AutoController {
         return ResponseEntity.ok(autoService.modificarAutoAutenticado(idAuto, dto));
     }
 
-    @Operation(summary = "Desactivar auto", description = "Desactiva una publicacion sin borrar el registro.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Auto desactivado"),
-            @ApiResponse(responseCode = "403", description = "No puede desactivar este auto"),
-            @ApiResponse(responseCode = "404", description = "Auto inexistente")
-    })
     @DeleteMapping("/{idAuto}/propietario/{idPropietario}")
     public ResponseEntity<Void> desactivarAuto(
             @PathVariable Integer idAuto,

@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import com.AutoRent.Backend.dto.auto.AutoDto;
 import com.AutoRent.Backend.exception.DatoDuplicadoException;
+import com.AutoRent.Backend.exception.ParametroIncorrectoException;
 import com.AutoRent.Backend.exception.PermisoInsuficienteException;
 import com.AutoRent.Backend.model.Auto;
 import com.AutoRent.Backend.model.Usuario;
@@ -15,6 +16,7 @@ import com.AutoRent.Backend.model.enums.TipoTransmision;
 import com.AutoRent.Backend.repository.AutoRepository;
 import com.AutoRent.Backend.repository.CategoriaAutoRepository;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,6 +71,27 @@ class AutoServiceTest {
         assertThrows(
                 PermisoInsuficienteException.class,
                 () -> autoService.modificarAutoAutenticado(10, crearAutoDto("ABC123"))
+        );
+    }
+
+    @Test
+    void buscarDisponiblesConFechaFinAnteriorLanzaParametroIncorrecto() {
+        LocalDate fechaInicio = LocalDate.now().plusDays(5);
+        LocalDate fechaFin = LocalDate.now().plusDays(3);
+
+        assertThrows(
+                ParametroIncorrectoException.class,
+                () -> autoService.buscarDisponibles(
+                        "Cordoba",
+                        fechaInicio,
+                        fechaFin,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                )
         );
     }
 

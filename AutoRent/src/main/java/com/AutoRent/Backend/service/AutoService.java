@@ -6,14 +6,20 @@ import com.AutoRent.Backend.dto.auto.AutoDto;
 import com.AutoRent.Backend.dto.auto.AutoRespuestaDto;
 import com.AutoRent.Backend.exception.DatoDuplicadoException;
 import com.AutoRent.Backend.exception.IdNoEncontradoException;
+import com.AutoRent.Backend.exception.ParametroIncorrectoException;
 import com.AutoRent.Backend.exception.PermisoInsuficienteException;
 import com.AutoRent.Backend.model.Auto;
 import com.AutoRent.Backend.model.CategoriaAuto;
 import com.AutoRent.Backend.model.Usuario;
+import com.AutoRent.Backend.model.enums.EstadoReserva;
 import com.AutoRent.Backend.model.enums.NombreCategoriaAuto;
 import com.AutoRent.Backend.model.enums.NombreRol;
+import com.AutoRent.Backend.model.enums.TipoCombustible;
+import com.AutoRent.Backend.model.enums.TipoTransmision;
 import com.AutoRent.Backend.repository.AutoRepository;
 import com.AutoRent.Backend.repository.CategoriaAutoRepository;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -73,6 +79,37 @@ public class AutoService {
                 .toList();
     }
 
+    public List<AutoRespuestaDto> listarMisAutos() {
+        Usuario propietario = usuarioService.obtenerUsuarioAutenticado();
+
+        return autoRepository.findByPropietarioIdUsuarioOrderByFechaPublicacionDesc(propietario.getIdUsuario())
+                .stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
+    public List<AutoRespuestaDto> listarMisAutosPorEstado(Boolean activo) {
+        Usuario propietario = usuarioService.obtenerUsuarioAutenticado();
+
+        return autoRepository.findByPropietarioIdUsuarioAndActivoOrderByFechaPublicacionDesc(
+                        propietario.getIdUsuario(),
+                        activo
+                ).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
+    public List<AutoRespuestaDto> listarMisAutosPorCategoria(NombreCategoriaAuto categoria) {
+        Usuario propietario = usuarioService.obtenerUsuarioAutenticado();
+
+        return autoRepository.findByPropietarioIdUsuarioAndCategoriaNombreOrderByFechaPublicacionDesc(
+                        propietario.getIdUsuario(),
+                        categoria
+                ).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
     public List<AutoRespuestaDto> listarPorCategoria(NombreCategoriaAuto categoria) {
         return autoRepository.findByCategoriaNombreAndActivoTrue(categoria).stream()
                 .map(this::convertirARespuesta)
@@ -87,6 +124,57 @@ public class AutoService {
 
     public List<AutoRespuestaDto> listarPorCiudad(String ciudad) {
         return autoRepository.findByCiudadContainingIgnoreCaseAndActivoTrue(ciudad).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
+    public List<AutoRespuestaDto> buscarConFiltros(
+            String ciudad,
+            String marca,
+            NombreCategoriaAuto categoria,
+            BigDecimal precioMax,
+            Integer pasajeros,
+            TipoTransmision transmision,
+            TipoCombustible combustible
+    ) {
+        return autoRepository.buscarConFiltros(
+                        normalizarTexto(ciudad),
+                        normalizarTexto(marca),
+                        categoria,
+                        precioMax,
+                        pasajeros,
+                        transmision,
+                        combustible
+                ).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
+    public List<AutoRespuestaDto> buscarDisponibles(
+            String ciudad,
+            LocalDate fechaInicio,
+            LocalDate fechaFin,
+            String marca,
+            NombreCategoriaAuto categoria,
+            BigDecimal precioMax,
+            Integer pasajeros,
+            TipoTransmision transmision,
+            TipoCombustible combustible
+    ) {
+        validarBusquedaDisponibles(ciudad, fechaInicio, fechaFin);
+
+        return autoRepository.buscarDisponibles(
+                        ciudad.trim(),
+                        fechaInicio,
+                        fechaFin,
+                        List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA),
+                        normalizarTexto(marca),
+                        categoria,
+                        precioMax,
+                        pasajeros,
+                        transmision,
+                        combustible
+                ).stream()
                 .map(this::convertirARespuesta)
                 .toList();
     }
@@ -197,6 +285,31 @@ public class AutoService {
 
     private boolean tieneRol(Usuario usuario, NombreRol nombreRol) {
         return usuarioService.tieneRol(usuario, nombreRol);
+    }
+
+    private void validarBusquedaDisponibles(String ciudad, LocalDate fechaInicio, LocalDate fechaFin) {
+        if (ciudad == null || ciudad.isBlank()) {
+            throw new ParametroIncorrectoException("La ciudad es obligatoria");
+        }
+
+        if (fechaInicio == null || fechaFin == null) {
+            throw new ParametroIncorrectoException("Las fechas son obligatorias");
+        }
+
+        if (fechaInicio.isBefore(LocalDate.now())) {
+            throw new ParametroIncorrectoException("La fecha de inicio no puede ser anterior a hoy");
+        }
+
+        if (!fechaFin.isAfter(fechaInicio)) {
+            throw new ParametroIncorrectoException("La fecha de fin debe ser posterior a la fecha de inicio");
+        }
+    }
+
+    private String normalizarTexto(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return null;
+        }
+        return texto.trim();
     }
 
     private AutoRespuestaDto convertirARespuesta(Auto auto) {

@@ -2,6 +2,7 @@ package com.AutoRent.Backend.service;
 
 import lombok.RequiredArgsConstructor;
 
+import com.AutoRent.Backend.dto.usuario.ActualizarUsuarioDto;
 import com.AutoRent.Backend.dto.usuario.AuthRespuestaDto;
 import com.AutoRent.Backend.dto.usuario.LoginDto;
 import com.AutoRent.Backend.dto.usuario.RegistroUsuarioDto;
@@ -94,6 +95,22 @@ public class UsuarioService {
         return convertirARespuesta(obtenerUsuarioAutenticado());
     }
 
+    @Transactional
+    public UsuarioRespuestaDto actualizarMiUsuario(ActualizarUsuarioDto dto) {
+        Usuario usuario = obtenerUsuarioAutenticado();
+
+        if (!usuario.getEmail().equalsIgnoreCase(dto.getEmail())
+                && usuarioRepository.existsByEmailIgnoreCase(dto.getEmail())) {
+            throw new DatoDuplicadoException("El email ya esta registrado");
+        }
+
+        usuario.setNombre(dto.getNombre());
+        usuario.setEmail(dto.getEmail());
+        usuario.setTelefono(dto.getTelefono());
+
+        return convertirARespuesta(usuarioRepository.save(usuario));
+    }
+
     public UsuarioRespuestaDto buscarPorId(Integer idUsuario) {
         Usuario usuario = obtenerUsuarioPorId(idUsuario);
         return convertirARespuesta(usuario);
@@ -112,12 +129,25 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
+    public void desactivarMiUsuario() {
+        Usuario usuario = obtenerUsuarioAutenticado();
+        usuario.setActivo(false);
+        usuarioRepository.save(usuario);
+    }
+
     @Transactional
     public void agregarRol(Integer idUsuario, NombreRol nombreRol) {
         Usuario usuario = obtenerUsuarioPorIdConRoles(idUsuario);
         Rol rol = rolService.buscarPorNombre(nombreRol);
 
         usuario.getRoles().add(rol);
+        usuarioRepository.save(usuario);
+    }
+
+    @Transactional
+    public void quitarRol(Integer idUsuario, NombreRol nombreRol) {
+        Usuario usuario = obtenerUsuarioPorIdConRoles(idUsuario);
+        usuario.getRoles().removeIf(rol -> rol.getNombre() == nombreRol);
         usuarioRepository.save(usuario);
     }
 

@@ -44,14 +44,20 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/autos/me/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/autos/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/autos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios/logout").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/me").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/me").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/roles/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/usuarios/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/pagos").hasRole("ADMINISTRADOR")
                         .requestMatchers(
                                 "/api/pagos/*/aprobar",
                                 "/api/pagos/*/rechazar",
@@ -61,6 +67,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/pagos/estado/**", "/api/pagos/fechas/**")
                         .hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/propietarios/*/verificar").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/propietarios/activos/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/propietarios/me").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/propietarios/*").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/api/autos/**").hasAnyRole("PROPIETARIO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/autos/**").hasAnyRole("PROPIETARIO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/autos/**").hasAnyRole("PROPIETARIO", "ADMINISTRADOR")

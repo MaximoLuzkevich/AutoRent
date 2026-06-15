@@ -96,6 +96,29 @@ public class ReservaService {
                 .toList();
     }
 
+    public List<ReservaRespuestaDto> listarMisReservasPorEstado(EstadoReserva estado) {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        return reservaRepository.findByClienteIdUsuarioAndEstadoOrderByFechaInicioDesc(
+                        usuario.getIdUsuario(),
+                        estado
+                ).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
+    public List<ReservaRespuestaDto> listarMisReservasPorFechas(LocalDate desde, LocalDate hasta) {
+        validarRangoFechas(desde, hasta);
+
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        return reservaRepository.findByClienteIdUsuarioAndFechaInicioBetweenOrderByFechaInicioDesc(
+                        usuario.getIdUsuario(),
+                        desde,
+                        hasta
+                ).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
     public List<ReservaRespuestaDto> listarReservasPorPropietario(Integer idPropietario) {
         usuarioService.validarUsuarioActualOAdministrador(
                 idPropietario,
@@ -127,6 +150,17 @@ public class ReservaService {
         validarAdministrador("Solo un administrador puede consultar reservas por estado");
 
         return reservaRepository.findByEstadoOrderByFechaReservaDesc(estado).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
+    public List<ReservaRespuestaDto> listarMisReservasPendientesComoPropietario() {
+        Usuario propietario = usuarioService.obtenerUsuarioAutenticado();
+
+        return reservaRepository.findByAutoPropietarioIdUsuarioAndEstadoOrderByFechaReservaDesc(
+                        propietario.getIdUsuario(),
+                        EstadoReserva.PENDIENTE
+                ).stream()
                 .map(this::convertirARespuesta)
                 .toList();
     }
@@ -209,6 +243,16 @@ public class ReservaService {
         if (reserva.getEstado() == EstadoReserva.PENDIENTE) {
             reserva.setEstado(EstadoReserva.CONFIRMADA);
             reservaRepository.save(reserva);
+        }
+    }
+
+    private void validarRangoFechas(LocalDate desde, LocalDate hasta) {
+        if (desde == null || hasta == null) {
+            throw new ParametroIncorrectoException("Las fechas son obligatorias");
+        }
+
+        if (hasta.isBefore(desde)) {
+            throw new ParametroIncorrectoException("La fecha hasta no puede ser anterior a la fecha desde");
         }
     }
 

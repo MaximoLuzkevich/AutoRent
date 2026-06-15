@@ -13,7 +13,23 @@ public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
 
     List<Reserva> findByClienteIdUsuarioOrderByFechaInicioDesc(Integer idCliente);
 
+    List<Reserva> findByClienteIdUsuarioAndEstadoOrderByFechaInicioDesc(
+            Integer idCliente,
+            EstadoReserva estado
+    );
+
+    List<Reserva> findByClienteIdUsuarioAndFechaInicioBetweenOrderByFechaInicioDesc(
+            Integer idCliente,
+            LocalDate desde,
+            LocalDate hasta
+    );
+
     List<Reserva> findByAutoPropietarioIdUsuarioOrderByFechaInicioDesc(Integer idPropietario);
+
+    List<Reserva> findByAutoPropietarioIdUsuarioAndEstadoOrderByFechaReservaDesc(
+            Integer idPropietario,
+            EstadoReserva estado
+    );
 
     List<Reserva> findByAutoPropietarioIdUsuarioAndAutoIdAutoOrderByFechaInicioDesc(
             Integer idPropietario,
