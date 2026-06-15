@@ -1,10 +1,14 @@
 package com.AutoRent.Backend.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import com.AutoRent.Backend.dto.pago.PagoDto;
+import com.AutoRent.Backend.dto.pago.PagoRespuestaDto;
+import com.AutoRent.Backend.model.Pago;
 import com.AutoRent.Backend.exception.ParametroIncorrectoException;
 import com.AutoRent.Backend.exception.PermisoInsuficienteException;
 import com.AutoRent.Backend.model.Reserva;
@@ -73,6 +77,51 @@ class PagoServiceTest {
         when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(otroCliente);
 
         assertThrows(PermisoInsuficienteException.class, () -> pagoService.registrarPago(dto));
+    }
+
+    @Test
+    void registrarPagoConTarjetaSinDatosLanzaParametroIncorrecto() {
+        Usuario cliente = new Usuario();
+        cliente.setIdUsuario(1);
+
+        Reserva reserva = new Reserva();
+        reserva.setIdReserva(1);
+        reserva.setEstado(EstadoReserva.PENDIENTE);
+        reserva.setPrecioTotal(BigDecimal.valueOf(40000));
+        reserva.setCliente(cliente);
+
+        PagoDto dto = new PagoDto(BigDecimal.valueOf(40000), MetodoPago.TARJETA, 1);
+
+        when(reservaService.obtenerReservaPorId(1)).thenReturn(reserva);
+        when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(cliente);
+
+        assertThrows(ParametroIncorrectoException.class, () -> pagoService.registrarPago(dto));
+    }
+
+    @Test
+    void registrarPagoConMercadoPagoDevuelveLinkSimulado() {
+        Usuario cliente = new Usuario();
+        cliente.setIdUsuario(1);
+
+        Reserva reserva = new Reserva();
+        reserva.setIdReserva(1);
+        reserva.setEstado(EstadoReserva.PENDIENTE);
+        reserva.setPrecioTotal(BigDecimal.valueOf(40000));
+        reserva.setCliente(cliente);
+
+        PagoDto dto = new PagoDto(BigDecimal.valueOf(40000), MetodoPago.MERCADO_PAGO, 1);
+
+        when(reservaService.obtenerReservaPorId(1)).thenReturn(reserva);
+        when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(cliente);
+        when(pagoRepository.save(any(Pago.class))).thenAnswer(invocation -> {
+            Pago pago = invocation.getArgument(0);
+            pago.setIdPago(9);
+            return pago;
+        });
+
+        PagoRespuestaDto respuesta = pagoService.registrarPago(dto);
+
+        assertEquals("https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=autorent-9", respuesta.getLinkPago());
     }
 
     @Test
