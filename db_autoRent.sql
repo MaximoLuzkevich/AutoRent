@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS perfil_propietario (
     provincia VARCHAR(100),
     fecha_alta DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     verificado BOOLEAN NOT NULL DEFAULT FALSE,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
 
     CONSTRAINT fk_perfil_propietario_usuario
         FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
