@@ -28,6 +28,7 @@ public class PagoService {
     private final PagoRepository pagoRepository;
     private final ReservaService reservaService;
     private final UsuarioService usuarioService;
+    private final MercadoPagoService mercadoPagoService;
 
 
     @Transactional
@@ -52,7 +53,9 @@ public class PagoService {
         pago.setEstado(EstadoPago.PENDIENTE);
         pago.setReserva(reserva);
 
-        return convertirARespuesta(pagoRepository.save(pago));
+        Pago pagoGuardado = pagoRepository.save(pago);
+        String linkPago = generarLinkPago(pagoGuardado);
+        return convertirARespuesta(pagoGuardado, linkPago);
     }
 
     public List<PagoRespuestaDto> listarPagosPorReserva(Integer idReserva) {
@@ -166,6 +169,10 @@ public class PagoService {
     }
 
     private PagoRespuestaDto convertirARespuesta(Pago pago) {
+        return convertirARespuesta(pago, null);
+    }
+
+    private PagoRespuestaDto convertirARespuesta(Pago pago, String linkPago) {
         return new PagoRespuestaDto(
                 pago.getIdPago(),
                 pago.getMonto(),
@@ -173,7 +180,7 @@ public class PagoService {
                 pago.getEstado(),
                 pago.getFechaPago(),
                 pago.getReserva().getIdReserva(),
-                generarLinkPago(pago)
+                linkPago
         );
     }
 
@@ -221,9 +228,7 @@ public class PagoService {
             return null;
         }
 
-        Integer idPago = pago.getIdPago();
-        String referencia = idPago == null ? "pendiente" : idPago.toString();
-        return "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=autorent-" + referencia;
+        return mercadoPagoService.crearPreferencia(pago);
     }
 
     private boolean estaVacio(String texto) {

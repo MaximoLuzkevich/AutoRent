@@ -35,6 +35,9 @@ class PagoServiceTest {
     @Mock
     private UsuarioService usuarioService;
 
+    @Mock
+    private MercadoPagoService mercadoPagoService;
+
     @InjectMocks
     private PagoService pagoService;
 
@@ -99,7 +102,7 @@ class PagoServiceTest {
     }
 
     @Test
-    void registrarPagoConMercadoPagoDevuelveLinkSimulado() {
+    void registrarPagoConMercadoPagoDevuelveLinkDePreferencia() {
         Usuario cliente = new Usuario();
         cliente.setIdUsuario(1);
 
@@ -118,10 +121,11 @@ class PagoServiceTest {
             pago.setIdPago(9);
             return pago;
         });
+        when(mercadoPagoService.crearPreferencia(any(Pago.class))).thenReturn("https://mp.test/pagar/9");
 
         PagoRespuestaDto respuesta = pagoService.registrarPago(dto);
 
-        assertEquals("https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=autorent-9", respuesta.getLinkPago());
+        assertEquals("https://mp.test/pagar/9", respuesta.getLinkPago());
     }
 
     @Test

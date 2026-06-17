@@ -394,7 +394,7 @@ Content-Type: application/json
 
 Los datos de tarjeta se validan para simular el pago, pero no se guardan como datos sensibles en la base.
 
-Para simular Mercado Pago:
+Para pagar con Mercado Pago:
 
 ```json
 {
@@ -404,7 +404,7 @@ Para simular Mercado Pago:
 }
 ```
 
-La respuesta incluye un `linkPago` simulado para representar el enlace de pago.
+La respuesta incluye un `linkPago` generado por Mercado Pago mediante Checkout Pro. Para que funcione, se debe configurar `MERCADOPAGO_ACCESS_TOKEN` como variable de entorno.
 
 ## Validaciones y manejo de errores
 
@@ -444,7 +444,7 @@ Tambien cuenta con excepciones personalizadas y un `GlobalExceptionHandler` para
 - El monto de un pago debe coincidir con el total de la reserva.
 - Un cliente solo puede pagar reservas propias.
 - Los pagos con tarjeta requieren datos basicos de tarjeta, pero esos datos no se guardan.
-- Los pagos con Mercado Pago devuelven un link de pago simulado.
+- Los pagos con Mercado Pago crean una preferencia real de Checkout Pro y devuelven el link de pago.
 - Cliente, propietario y administrador solo pueden consultar pagos que les correspondan, salvo reportes administrativos.
 - No puede registrarse mas de un pago pendiente o aprobado para la misma reserva.
 - Solo se pueden aprobar o rechazar pagos `PENDIENTE`.
@@ -469,7 +469,7 @@ Tambien incluye tests unitarios de services para reglas de negocio importantes:
 - Pago con monto distinto al total de la reserva.
 - Pago de una reserva ajena.
 - Pago con tarjeta sin datos obligatorios.
-- Pago con Mercado Pago y link simulado.
+- Pago con Mercado Pago y link de Checkout Pro.
 - Aprobacion de pago sin rol administrador.
 - Consulta de pagos de otro propietario.
 - Consulta de reserva ajena.
