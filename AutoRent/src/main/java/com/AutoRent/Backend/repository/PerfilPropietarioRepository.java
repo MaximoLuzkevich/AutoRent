@@ -10,6 +10,8 @@ public interface PerfilPropietarioRepository extends JpaRepository<PerfilPropiet
 
     List<PerfilPropietario> findByVerificadoOrderByFechaAltaDesc(Boolean verificado);
 
+    List<PerfilPropietario> findByActivoOrderByFechaAltaDesc(Boolean activo);
+
     List<PerfilPropietario> findByCiudadContainingIgnoreCaseOrderByFechaAltaDesc(String ciudad);
 
     List<PerfilPropietario> findByProvinciaContainingIgnoreCaseOrderByFechaAltaDesc(String provincia);

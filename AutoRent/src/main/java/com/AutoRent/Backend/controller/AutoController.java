@@ -5,10 +5,14 @@ import lombok.RequiredArgsConstructor;
 import com.AutoRent.Backend.dto.auto.AutoDto;
 import com.AutoRent.Backend.dto.auto.AutoRespuestaDto;
 import com.AutoRent.Backend.model.enums.NombreCategoriaAuto;
+import com.AutoRent.Backend.model.enums.TipoCombustible;
+import com.AutoRent.Backend.model.enums.TipoTransmision;
 import com.AutoRent.Backend.service.AutoService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,16 +21,21 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/autos")
-@Tag(name = "Autos")
 @RequiredArgsConstructor
 public class AutoController {
 
     private final AutoService autoService;
 
+
+    @PostMapping("/me")
+    public ResponseEntity<AutoRespuestaDto> crearMiAuto(@Valid @RequestBody AutoDto dto) {
+        return ResponseEntity.ok(autoService.crearAutoAutenticado(dto));
+    }
 
     @PostMapping("/propietario/{idPropietario}")
     public ResponseEntity<AutoRespuestaDto> crearAuto(
@@ -39,6 +48,69 @@ public class AutoController {
     @GetMapping
     public ResponseEntity<List<AutoRespuestaDto>> listarAutosActivos() {
         return ResponseEntity.ok(autoService.listarAutosActivos());
+    }
+
+    @GetMapping("/filtrar")
+    public ResponseEntity<List<AutoRespuestaDto>> buscarConFiltros(
+            @RequestParam(required = false) String ciudad,
+            @RequestParam(required = false) String marca,
+            @RequestParam(required = false) NombreCategoriaAuto categoria,
+            @RequestParam(required = false) BigDecimal precioMax,
+            @RequestParam(required = false) Integer pasajeros,
+            @RequestParam(required = false) TipoTransmision transmision,
+            @RequestParam(required = false) TipoCombustible combustible
+    ) {
+        return ResponseEntity.ok(autoService.buscarConFiltros(
+                ciudad,
+                marca,
+                categoria,
+                precioMax,
+                pasajeros,
+                transmision,
+                combustible
+        ));
+    }
+
+    @GetMapping("/disponibles")
+    public ResponseEntity<List<AutoRespuestaDto>> buscarDisponibles(
+            @RequestParam String ciudad,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
+            @RequestParam(required = false) String marca,
+            @RequestParam(required = false) NombreCategoriaAuto categoria,
+            @RequestParam(required = false) BigDecimal precioMax,
+            @RequestParam(required = false) Integer pasajeros,
+            @RequestParam(required = false) TipoTransmision transmision,
+            @RequestParam(required = false) TipoCombustible combustible
+    ) {
+        return ResponseEntity.ok(autoService.buscarDisponibles(
+                ciudad,
+                fechaInicio,
+                fechaFin,
+                marca,
+                categoria,
+                precioMax,
+                pasajeros,
+                transmision,
+                combustible
+        ));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<AutoRespuestaDto>> listarMisAutos() {
+        return ResponseEntity.ok(autoService.listarMisAutos());
+    }
+
+    @GetMapping("/me/estado/{activo}")
+    public ResponseEntity<List<AutoRespuestaDto>> listarMisAutosPorEstado(@PathVariable Boolean activo) {
+        return ResponseEntity.ok(autoService.listarMisAutosPorEstado(activo));
+    }
+
+    @GetMapping("/me/categoria/{categoria}")
+    public ResponseEntity<List<AutoRespuestaDto>> listarMisAutosPorCategoria(
+            @PathVariable NombreCategoriaAuto categoria
+    ) {
+        return ResponseEntity.ok(autoService.listarMisAutosPorCategoria(categoria));
     }
 
     @GetMapping("/{idAuto}")
@@ -75,12 +147,26 @@ public class AutoController {
         return ResponseEntity.ok(autoService.modificarAuto(idAuto, idPropietario, dto));
     }
 
+    @PutMapping("/{idAuto}/me")
+    public ResponseEntity<AutoRespuestaDto> modificarMiAuto(
+            @PathVariable Integer idAuto,
+            @Valid @RequestBody AutoDto dto
+    ) {
+        return ResponseEntity.ok(autoService.modificarAutoAutenticado(idAuto, dto));
+    }
+
     @DeleteMapping("/{idAuto}/propietario/{idPropietario}")
     public ResponseEntity<Void> desactivarAuto(
             @PathVariable Integer idAuto,
             @PathVariable Integer idPropietario
     ) {
         autoService.desactivarAuto(idAuto, idPropietario);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{idAuto}/me")
+    public ResponseEntity<Void> desactivarMiAuto(@PathVariable Integer idAuto) {
+        autoService.desactivarAutoAutenticado(idAuto);
         return ResponseEntity.noContent().build();
     }
 }

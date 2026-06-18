@@ -12,6 +12,7 @@ import com.AutoRent.Backend.model.enums.NombreRol;
 import com.AutoRent.Backend.repository.PerfilPropietarioRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,12 +22,37 @@ public class PerfilPropietarioService {
     private final UsuarioService usuarioService;
 
 
+    @Transactional
+    public PerfilPropietarioRespuestaDto crearMiPerfil(PerfilPropietarioDto dto) {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        return crearPerfilParaUsuario(usuario, dto);
+    }
+
+    @Transactional
     public PerfilPropietarioRespuestaDto crearPerfil(Integer idUsuario, PerfilPropietarioDto dto) {
-        if (perfilPropietarioRepository.existsById(idUsuario)) {
-            throw new DatoDuplicadoException("El usuario ya tiene perfil de propietario");
-        }
+        usuarioService.validarUsuarioActualOAdministrador(
+                idUsuario,
+                "No podes crear un perfil para otro usuario"
+        );
 
         Usuario usuario = usuarioService.obtenerUsuarioPorId(idUsuario);
+        return crearPerfilParaUsuario(usuario, dto);
+    }
+
+    private PerfilPropietarioRespuestaDto crearPerfilParaUsuario(Usuario usuario, PerfilPropietarioDto dto) {
+        Integer idUsuario = usuario.getIdUsuario();
+
+        if (perfilPropietarioRepository.existsById(idUsuario)) {
+            PerfilPropietario perfilExistente = obtenerPerfilPorUsuario(idUsuario);
+            if (Boolean.TRUE.equals(perfilExistente.getActivo())) {
+                throw new DatoDuplicadoException("El usuario ya tiene perfil de propietario");
+            }
+
+            cargarDatosPerfil(perfilExistente, dto);
+            perfilExistente.setActivo(true);
+            usuarioService.agregarRol(idUsuario, NombreRol.PROPIETARIO);
+            return convertirARespuesta(perfilPropietarioRepository.save(perfilExistente));
+        }
 
         PerfilPropietario perfil = new PerfilPropietario();
         perfil.setUsuario(usuario);
@@ -39,10 +65,20 @@ public class PerfilPropietarioService {
     }
 
     public PerfilPropietarioRespuestaDto modificarPerfil(Integer idUsuario, PerfilPropietarioDto dto) {
+        usuarioService.validarUsuarioActualOAdministrador(
+                idUsuario,
+                "No podes modificar un perfil de otro usuario"
+        );
+
         PerfilPropietario perfil = obtenerPerfilPorUsuario(idUsuario);
         cargarDatosPerfil(perfil, dto);
 
         return convertirARespuesta(perfilPropietarioRepository.save(perfil));
+    }
+
+    public PerfilPropietarioRespuestaDto modificarMiPerfil(PerfilPropietarioDto dto) {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        return modificarPerfil(usuario.getIdUsuario(), dto);
     }
 
     public PerfilPropietarioRespuestaDto verificarPropietario(Integer idUsuario) {
@@ -52,12 +88,48 @@ public class PerfilPropietarioService {
         return convertirARespuesta(perfilPropietarioRepository.save(perfil));
     }
 
+    @Transactional
+    public void desactivarMiPerfil() {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        desactivarPerfil(usuario.getIdUsuario());
+    }
+
+    @Transactional
+    public void desactivarPerfil(Integer idUsuario) {
+        usuarioService.validarUsuarioActualOAdministrador(
+                idUsuario,
+                "No podes dar de baja el perfil de otro usuario"
+        );
+
+        PerfilPropietario perfil = obtenerPerfilPorUsuario(idUsuario);
+        perfil.setActivo(false);
+        perfil.setVerificado(false);
+        perfilPropietarioRepository.save(perfil);
+        usuarioService.quitarRol(idUsuario, NombreRol.PROPIETARIO);
+    }
+
     public PerfilPropietarioRespuestaDto buscarPorUsuario(Integer idUsuario) {
+        usuarioService.validarUsuarioActualOAdministrador(
+                idUsuario,
+                "No podes consultar el perfil de otro usuario"
+        );
+
         return convertirARespuesta(obtenerPerfilPorUsuario(idUsuario));
+    }
+
+    public PerfilPropietarioRespuestaDto buscarMiPerfil() {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        return convertirARespuesta(obtenerPerfilPorUsuario(usuario.getIdUsuario()));
     }
 
     public List<PerfilPropietarioRespuestaDto> listarPorVerificado(Boolean verificado) {
         return perfilPropietarioRepository.findByVerificadoOrderByFechaAltaDesc(verificado).stream()
+                .map(this::convertirARespuesta)
+                .toList();
+    }
+
+    public List<PerfilPropietarioRespuestaDto> listarPorActivo(Boolean activo) {
+        return perfilPropietarioRepository.findByActivoOrderByFechaAltaDesc(activo).stream()
                 .map(this::convertirARespuesta)
                 .toList();
     }
@@ -106,7 +178,8 @@ public class PerfilPropietarioService {
                 perfil.getCiudad(),
                 perfil.getProvincia(),
                 perfil.getFechaAlta(),
-                perfil.getVerificado()
+                perfil.getVerificado(),
+                perfil.getActivo()
         );
     }
 }

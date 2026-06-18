@@ -2,21 +2,28 @@ package com.AutoRent.Backend.service;
 
 import lombok.RequiredArgsConstructor;
 
+import com.AutoRent.Backend.dto.usuario.ActualizarUsuarioDto;
+import com.AutoRent.Backend.dto.usuario.AuthRespuestaDto;
 import com.AutoRent.Backend.dto.usuario.LoginDto;
 import com.AutoRent.Backend.dto.usuario.RegistroUsuarioDto;
 import com.AutoRent.Backend.dto.usuario.UsuarioRespuestaDto;
 import com.AutoRent.Backend.exception.DatoDuplicadoException;
 import com.AutoRent.Backend.exception.IdNoEncontradoException;
 import com.AutoRent.Backend.exception.LoginRequeridoException;
+import com.AutoRent.Backend.exception.PermisoInsuficienteException;
 import com.AutoRent.Backend.model.Rol;
 import com.AutoRent.Backend.model.Usuario;
 import com.AutoRent.Backend.model.enums.NombreRol;
 import com.AutoRent.Backend.repository.UsuarioRepository;
+import com.AutoRent.Backend.security.JwtService;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,8 +32,10 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final RolService rolService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
 
+    @Transactional
     public UsuarioRespuestaDto registrarUsuario(RegistroUsuarioDto dto) {
         if (usuarioRepository.existsByEmailIgnoreCase(dto.getEmail())) {
             throw new DatoDuplicadoException("El email ya esta registrado");
@@ -45,8 +54,8 @@ public class UsuarioService {
         return convertirARespuesta(usuarioGuardado);
     }
 
-    public UsuarioRespuestaDto iniciarSesion(LoginDto dto) {
-        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(dto.getEmail())
+    public AuthRespuestaDto iniciarSesion(LoginDto dto) {
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCaseConRoles(dto.getEmail())
                 .orElseThrow(() -> new LoginRequeridoException("Credenciales incorrectas"));
 
         if (!Boolean.TRUE.equals(usuario.getActivo())) {
@@ -57,7 +66,11 @@ public class UsuarioService {
             throw new LoginRequeridoException("Credenciales incorrectas");
         }
 
-        return convertirARespuesta(usuario);
+        return new AuthRespuestaDto(
+                jwtService.generarToken(usuario),
+                "Bearer",
+                convertirARespuesta(usuario)
+        );
     }
 
     public List<UsuarioRespuestaDto> listarUsuarios() {
@@ -78,6 +91,26 @@ public class UsuarioService {
                 .toList();
     }
 
+    public UsuarioRespuestaDto buscarMiUsuario() {
+        return convertirARespuesta(obtenerUsuarioAutenticado());
+    }
+
+    @Transactional
+    public UsuarioRespuestaDto actualizarMiUsuario(ActualizarUsuarioDto dto) {
+        Usuario usuario = obtenerUsuarioAutenticado();
+
+        if (!usuario.getEmail().equalsIgnoreCase(dto.getEmail())
+                && usuarioRepository.existsByEmailIgnoreCase(dto.getEmail())) {
+            throw new DatoDuplicadoException("El email ya esta registrado");
+        }
+
+        usuario.setNombre(dto.getNombre());
+        usuario.setEmail(dto.getEmail());
+        usuario.setTelefono(dto.getTelefono());
+
+        return convertirARespuesta(usuarioRepository.save(usuario));
+    }
+
     public UsuarioRespuestaDto buscarPorId(Integer idUsuario) {
         Usuario usuario = obtenerUsuarioPorId(idUsuario);
         return convertirARespuesta(usuario);
@@ -96,17 +129,62 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
+    public void desactivarMiUsuario() {
+        Usuario usuario = obtenerUsuarioAutenticado();
+        usuario.setActivo(false);
+        usuarioRepository.save(usuario);
+    }
+
+    @Transactional
     public void agregarRol(Integer idUsuario, NombreRol nombreRol) {
-        Usuario usuario = obtenerUsuarioPorId(idUsuario);
+        Usuario usuario = obtenerUsuarioPorIdConRoles(idUsuario);
         Rol rol = rolService.buscarPorNombre(nombreRol);
 
         usuario.getRoles().add(rol);
         usuarioRepository.save(usuario);
     }
 
+    @Transactional
+    public void quitarRol(Integer idUsuario, NombreRol nombreRol) {
+        Usuario usuario = obtenerUsuarioPorIdConRoles(idUsuario);
+        usuario.getRoles().removeIf(rol -> rol.getNombre() == nombreRol);
+        usuarioRepository.save(usuario);
+    }
+
     public Usuario obtenerUsuarioPorId(Integer idUsuario) {
         return usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new IdNoEncontradoException("Usuario no encontrado"));
+    }
+
+    public Usuario obtenerUsuarioPorIdConRoles(Integer idUsuario) {
+        return usuarioRepository.findByIdConRoles(idUsuario)
+                .orElseThrow(() -> new IdNoEncontradoException("Usuario no encontrado"));
+    }
+
+    public Usuario obtenerUsuarioAutenticado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new LoginRequeridoException("Usuario no autenticado");
+        }
+
+        String email = authentication.getName();
+        return usuarioRepository.findByEmailIgnoreCaseConRoles(email)
+                .orElseThrow(() -> new LoginRequeridoException("Usuario no autenticado"));
+    }
+
+    public void validarUsuarioActualOAdministrador(Integer idUsuario, String mensaje) {
+        Usuario usuario = obtenerUsuarioAutenticado();
+
+        if (!usuario.getIdUsuario().equals(idUsuario) && !tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
+            throw new PermisoInsuficienteException(mensaje);
+        }
+    }
+
+    public boolean tieneRol(Usuario usuario, NombreRol nombreRol) {
+        return usuario.getRoles().stream()
+                .map(Rol::getNombre)
+                .anyMatch(nombreRol::equals);
     }
 
     private UsuarioRespuestaDto convertirARespuesta(Usuario usuario) {

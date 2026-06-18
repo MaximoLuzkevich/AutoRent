@@ -6,7 +6,6 @@ import com.AutoRent.Backend.dto.pago.PagoDto;
 import com.AutoRent.Backend.dto.pago.PagoRespuestaDto;
 import com.AutoRent.Backend.model.enums.EstadoPago;
 import com.AutoRent.Backend.service.PagoService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/pagos")
-@Tag(name = "Pagos")
 @RequiredArgsConstructor
 public class PagoController {
 
@@ -32,6 +30,21 @@ public class PagoController {
     @PostMapping
     public ResponseEntity<PagoRespuestaDto> registrarPago(@Valid @RequestBody PagoDto dto) {
         return ResponseEntity.ok(pagoService.registrarPago(dto));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<PagoRespuestaDto>> listarMisPagos() {
+        return ResponseEntity.ok(pagoService.listarMisPagos());
+    }
+
+    @GetMapping("/me/propietario")
+    public ResponseEntity<List<PagoRespuestaDto>> listarPagosDeMisAutos() {
+        return ResponseEntity.ok(pagoService.listarPagosDeMisAutos());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PagoRespuestaDto>> listarTodosLosPagos() {
+        return ResponseEntity.ok(pagoService.listarTodosLosPagos());
     }
 
     @GetMapping("/reserva/{idReserva}")
@@ -67,8 +80,18 @@ public class PagoController {
         return ResponseEntity.ok(pagoService.aprobarPago(idPago));
     }
 
+    @PutMapping("/{idPago}/estado/aprobado")
+    public ResponseEntity<PagoRespuestaDto> marcarPagoAprobado(@PathVariable Integer idPago) {
+        return ResponseEntity.ok(pagoService.aprobarPago(idPago));
+    }
+
     @PutMapping("/{idPago}/rechazar")
     public ResponseEntity<PagoRespuestaDto> rechazarPago(@PathVariable Integer idPago) {
+        return ResponseEntity.ok(pagoService.rechazarPago(idPago));
+    }
+
+    @PutMapping("/{idPago}/estado/rechazado")
+    public ResponseEntity<PagoRespuestaDto> marcarPagoRechazado(@PathVariable Integer idPago) {
         return ResponseEntity.ok(pagoService.rechazarPago(idPago));
     }
 }

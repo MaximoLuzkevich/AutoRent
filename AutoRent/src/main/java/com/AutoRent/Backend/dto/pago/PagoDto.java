@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class PagoDto {
 
     @NotNull
-    @DecimalMin(value = "0.0")
+    @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal monto;
 
     @NotNull
@@ -22,4 +22,18 @@ public class PagoDto {
 
     @NotNull
     private Integer idReserva;
+
+    private String titularTarjeta;
+
+    private String numeroTarjeta;
+
+    private String vencimientoTarjeta;
+
+    private String codigoSeguridad;
+
+    public PagoDto(BigDecimal monto, MetodoPago metodoPago, Integer idReserva) {
+        this.monto = monto;
+        this.metodoPago = metodoPago;
+        this.idReserva = idReserva;
+    }
 }

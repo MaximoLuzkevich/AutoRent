@@ -2,14 +2,16 @@ package com.AutoRent.Backend.controller;
 
 import lombok.RequiredArgsConstructor;
 
+import com.AutoRent.Backend.dto.usuario.ActualizarUsuarioDto;
+import com.AutoRent.Backend.dto.usuario.AuthRespuestaDto;
 import com.AutoRent.Backend.dto.usuario.LoginDto;
 import com.AutoRent.Backend.dto.usuario.RegistroUsuarioDto;
 import com.AutoRent.Backend.dto.usuario.UsuarioRespuestaDto;
 import com.AutoRent.Backend.model.enums.NombreRol;
 import com.AutoRent.Backend.service.UsuarioService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/usuarios")
-@Tag(name = "Usuarios")
 @RequiredArgsConstructor
 public class UsuarioController {
 
@@ -35,13 +36,34 @@ public class UsuarioController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UsuarioRespuestaDto> iniciarSesion(@Valid @RequestBody LoginDto dto) {
+    public ResponseEntity<AuthRespuestaDto> iniciarSesion(@Valid @RequestBody LoginDto dto) {
         return ResponseEntity.ok(usuarioService.iniciarSesion(dto));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> cerrarSesion() {
+        return ResponseEntity.ok(Map.of("mensaje", "Sesion cerrada. El cliente debe eliminar el token JWT."));
     }
 
     @GetMapping
     public ResponseEntity<List<UsuarioRespuestaDto>> listarUsuarios() {
         return ResponseEntity.ok(usuarioService.listarUsuarios());
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioRespuestaDto> buscarMiUsuario() {
+        return ResponseEntity.ok(usuarioService.buscarMiUsuario());
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UsuarioRespuestaDto> actualizarMiUsuario(@Valid @RequestBody ActualizarUsuarioDto dto) {
+        return ResponseEntity.ok(usuarioService.actualizarMiUsuario(dto));
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> desactivarMiUsuario() {
+        usuarioService.desactivarMiUsuario();
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{idUsuario}")

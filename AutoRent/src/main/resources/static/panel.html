@@ -23,6 +23,10 @@
             <strong id="usuarioNombre"></strong>
             <span id="usuarioRoles" class="text-muted"></span>
         </div>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            <a class="btn btn-outline-primary btn-sm" href="propietario.html" data-action-link data-roles="CLIENTE ADMINISTRADOR">Te gustaria ser propietario?</a>
+            <a class="btn btn-primary btn-sm" href="auto-alta.html" data-action-link data-roles="PROPIETARIO ADMINISTRADOR">Publicar auto</a>
+        </div>
     </section>
 
     <div id="mensaje" class="alert d-none" role="alert"></div>
@@ -423,21 +427,21 @@
                     <button class="btn btn-primary btn-sm">Probar</button>
                 </form>
             </div>
-            <div class="col-md-4" data-roles="PROPIETARIO ADMINISTRADOR">
+            <div class="col-md-4" data-roles="ADMINISTRADOR">
                 <form class="endpoint-card" data-api-form data-method="PUT" data-url="/reservas/{idReserva}/confirmar">
                     <h3>Confirmar reserva</h3>
                     <input class="form-control form-control-sm" name="idReserva" placeholder="idReserva">
                     <button class="btn btn-primary btn-sm">Probar</button>
                 </form>
             </div>
-            <div class="col-md-4" data-roles="CLIENTE PROPIETARIO ADMINISTRADOR">
+            <div class="col-md-4" data-roles="CLIENTE ADMINISTRADOR">
                 <form class="endpoint-card" data-api-form data-method="PUT" data-url="/reservas/{idReserva}/cancelar">
                     <h3>Cancelar reserva</h3>
                     <input class="form-control form-control-sm" name="idReserva" placeholder="idReserva">
                     <button class="btn btn-primary btn-sm">Probar</button>
                 </form>
             </div>
-            <div class="col-md-4" data-roles="PROPIETARIO ADMINISTRADOR">
+            <div class="col-md-4" data-roles="ADMINISTRADOR">
                 <form class="endpoint-card" data-api-form data-method="PUT" data-url="/reservas/{idReserva}/finalizar">
                     <h3>Finalizar reserva</h3>
                     <input class="form-control form-control-sm" name="idReserva" placeholder="idReserva">

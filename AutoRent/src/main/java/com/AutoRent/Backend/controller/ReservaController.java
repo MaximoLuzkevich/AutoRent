@@ -6,9 +6,10 @@ import com.AutoRent.Backend.dto.reserva.ReservaDto;
 import com.AutoRent.Backend.dto.reserva.ReservaRespuestaDto;
 import com.AutoRent.Backend.model.enums.EstadoReserva;
 import com.AutoRent.Backend.service.ReservaService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,12 +21,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/reservas")
-@Tag(name = "Reservas")
 @RequiredArgsConstructor
 public class ReservaController {
 
     private final ReservaService reservaService;
 
+
+    @PostMapping("/me")
+    public ResponseEntity<ReservaRespuestaDto> crearMiReserva(@Valid @RequestBody ReservaDto dto) {
+        return ResponseEntity.ok(reservaService.crearReservaAutenticada(dto));
+    }
 
     @PostMapping("/cliente/{idCliente}")
     public ResponseEntity<ReservaRespuestaDto> crearReserva(
@@ -43,6 +48,31 @@ public class ReservaController {
     @GetMapping("/cliente/{idCliente}")
     public ResponseEntity<List<ReservaRespuestaDto>> listarReservasPorCliente(@PathVariable Integer idCliente) {
         return ResponseEntity.ok(reservaService.listarReservasPorCliente(idCliente));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<ReservaRespuestaDto>> listarMisReservas() {
+        return ResponseEntity.ok(reservaService.listarMisReservas());
+    }
+
+    @GetMapping("/me/estado/{estado}")
+    public ResponseEntity<List<ReservaRespuestaDto>> listarMisReservasPorEstado(
+            @PathVariable EstadoReserva estado
+    ) {
+        return ResponseEntity.ok(reservaService.listarMisReservasPorEstado(estado));
+    }
+
+    @GetMapping("/me/fechas/{desde}/{hasta}")
+    public ResponseEntity<List<ReservaRespuestaDto>> listarMisReservasPorFechas(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta
+    ) {
+        return ResponseEntity.ok(reservaService.listarMisReservasPorFechas(desde, hasta));
+    }
+
+    @GetMapping("/me/propietario/pendientes")
+    public ResponseEntity<List<ReservaRespuestaDto>> listarMisReservasPendientesComoPropietario() {
+        return ResponseEntity.ok(reservaService.listarMisReservasPendientesComoPropietario());
     }
 
     @GetMapping("/propietario/{idPropietario}")
@@ -70,13 +100,28 @@ public class ReservaController {
         return ResponseEntity.ok(reservaService.confirmarReserva(idReserva));
     }
 
+    @PutMapping("/{idReserva}/estado/confirmada")
+    public ResponseEntity<ReservaRespuestaDto> marcarReservaConfirmada(@PathVariable Integer idReserva) {
+        return ResponseEntity.ok(reservaService.confirmarReserva(idReserva));
+    }
+
     @PutMapping("/{idReserva}/cancelar")
     public ResponseEntity<ReservaRespuestaDto> cancelarReserva(@PathVariable Integer idReserva) {
         return ResponseEntity.ok(reservaService.cancelarReserva(idReserva));
     }
 
+    @PutMapping("/{idReserva}/estado/cancelada")
+    public ResponseEntity<ReservaRespuestaDto> marcarReservaCancelada(@PathVariable Integer idReserva) {
+        return ResponseEntity.ok(reservaService.cancelarReserva(idReserva));
+    }
+
     @PutMapping("/{idReserva}/finalizar")
     public ResponseEntity<ReservaRespuestaDto> finalizarReserva(@PathVariable Integer idReserva) {
+        return ResponseEntity.ok(reservaService.finalizarReserva(idReserva));
+    }
+
+    @PutMapping("/{idReserva}/estado/finalizada")
+    public ResponseEntity<ReservaRespuestaDto> marcarReservaFinalizada(@PathVariable Integer idReserva) {
         return ResponseEntity.ok(reservaService.finalizarReserva(idReserva));
     }
 }

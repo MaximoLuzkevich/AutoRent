@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import com.AutoRent.Backend.dto.imagenauto.ImagenAutoDto;
 import com.AutoRent.Backend.dto.imagenauto.ImagenAutoRespuestaDto;
 import com.AutoRent.Backend.service.ImagenAutoService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/autos/{idAuto}/imagenes")
-@Tag(name = "Imagenes de autos")
 @RequiredArgsConstructor
 public class ImagenAutoController {
 
@@ -45,8 +43,8 @@ public class ImagenAutoController {
     }
 
     @DeleteMapping("/{idImagen}")
-    public ResponseEntity<Void> eliminarImagen(@PathVariable Integer idImagen) {
-        imagenAutoService.eliminarImagen(idImagen);
+    public ResponseEntity<Void> eliminarImagen(@PathVariable Integer idAuto, @PathVariable Integer idImagen) {
+        imagenAutoService.eliminarImagen(idAuto, idImagen);
         return ResponseEntity.noContent().build();
     }
 }

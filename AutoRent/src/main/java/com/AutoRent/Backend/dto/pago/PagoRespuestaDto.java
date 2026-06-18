@@ -19,4 +19,5 @@ public class PagoRespuestaDto {
     private EstadoPago estado;
     private LocalDateTime fechaPago;
     private Integer idReserva;
+    private String linkPago;
 }
