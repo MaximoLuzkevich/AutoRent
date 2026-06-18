@@ -2,7 +2,7 @@
 
 AutoRent es una API RESTful desarrollada con Java y Spring Boot para gestionar una plataforma de alquiler de autos entre usuarios. El sistema permite registrar usuarios, administrar roles, publicar autos, crear reservas, registrar pagos, gestionar perfiles de propietarios, cargar imagenes de autos y publicar reviews.
 
-El proyecto fue realizado como Trabajo Practico Final de Programacion III, con foco en arquitectura backend, persistencia de datos, validaciones, manejo de errores, documentacion, autenticacion/autorizacion y uso de Git/GitHub.
+El proyecto fue realizado como Trabajo Practico Final de Programacion III, con foco en arquitectura backend, persistencia de datos, validaciones, manejo de errores, documentacion, autenticacion/autorizacion y uso de Git/GitHub. Tambien incluye un frontend simple realizado con HTML, Bootstrap y JavaScript para probar los flujos principales desde el navegador.
 
 ## Tecnologias utilizadas
 
@@ -17,6 +17,7 @@ El proyecto fue realizado como Trabajo Practico Final de Programacion III, con f
 - Bean Validation
 - Swagger / OpenAPI
 - JWT para autenticacion
+- HTML, CSS, Bootstrap y JavaScript para el frontend simple
 
 ## Repositorio
 
@@ -41,6 +42,14 @@ AutoRent/src/main/java/com/AutoRent/Backend
   security/     Logica de JWT, filtro de autenticacion y UserDetailsService
   service/      Logica de negocio del sistema
 ```
+
+El frontend estatico se encuentra en:
+
+```text
+AutoRent/src/main/resources/static
+```
+
+Incluye pantallas de login, registro, panel de cliente, panel de propietario, panel de administrador, formulario para convertirse en propietario y formulario para publicar/modificar autos.
 
 La idea principal es que los controllers reciban las peticiones HTTP, los services resuelvan las reglas de negocio, los repositories accedan a la base de datos y los DTOs eviten exponer directamente las entidades.
 
@@ -98,6 +107,7 @@ Para despliegue se recomienda configurar variables de entorno:
 | `DDL_AUTO` | Estrategia de Hibernate, por defecto `validate` |
 | `SHOW_SQL` | Mostrar SQL en consola, por defecto `false` |
 | `CORS_ALLOWED_ORIGINS` | Origenes permitidos separados por coma |
+| `MERCADOPAGO_ACCESS_TOKEN` | Token de Mercado Pago para generar links de Checkout Pro |
 
 ## Como ejecutar localmente
 
@@ -126,17 +136,23 @@ AutoRent/src/main/resources/application.properties
 mvn spring-boot:run
 ```
 
-5. La API queda disponible en:
+5. La aplicacion queda disponible en:
 
 ```text
 http://localhost:8080
 ```
 
-Si se desea usar el panel web simple incluido para probar la API:
+Pantallas principales del frontend:
 
 ```text
-http://localhost:8080/panel.html
+Login: http://localhost:8080/login.html
+Registro: http://localhost:8080/registro.html
+Panel cliente: http://localhost:8080/panel-cliente.html
+Panel propietario: http://localhost:8080/panel-propietario.html
+Panel administrador: http://localhost:8080/panel-admin.html
 ```
+
+Importante: el frontend debe abrirse desde `http://localhost:8080/...` con Spring Boot levantado. No se recomienda abrir los archivos HTML directamente desde el explorador, porque las llamadas `fetch` necesitan comunicarse con la API del backend.
 
 ## Swagger / OpenAPI
 
@@ -267,12 +283,12 @@ La autorizacion restringe acciones segun los roles `CLIENTE`, `PROPIETARIO` y `A
 - `GET /api/reservas/me/propietario/pendientes`: listar reservas pendientes recibidas por autos propios.
 - `GET /api/reservas/propietario/{idPropietario}`: listar reservas de autos de un propietario.
 - `GET /api/reservas/estado/{estado}`: listar reservas por estado.
-- `PUT /api/reservas/{idReserva}/confirmar`: confirmar reserva.
-- `PUT /api/reservas/{idReserva}/estado/confirmada`: confirmar reserva.
-- `PUT /api/reservas/{idReserva}/cancelar`: cancelar reserva.
-- `PUT /api/reservas/{idReserva}/estado/cancelada`: cancelar reserva.
-- `PUT /api/reservas/{idReserva}/finalizar`: finalizar reserva.
-- `PUT /api/reservas/{idReserva}/estado/finalizada`: finalizar reserva.
+- `PUT /api/reservas/{idReserva}/confirmar`: confirmar reserva, solo administrador.
+- `PUT /api/reservas/{idReserva}/estado/confirmada`: confirmar reserva, solo administrador.
+- `PUT /api/reservas/{idReserva}/cancelar`: cancelar reserva, cliente o administrador.
+- `PUT /api/reservas/{idReserva}/estado/cancelada`: cancelar reserva, cliente o administrador.
+- `PUT /api/reservas/{idReserva}/finalizar`: finalizar reserva, solo administrador.
+- `PUT /api/reservas/{idReserva}/estado/finalizada`: finalizar reserva, solo administrador.
 
 ### Pagos
 
@@ -404,7 +420,9 @@ Para pagar con Mercado Pago:
 }
 ```
 
-La respuesta incluye un `linkPago` generado por Mercado Pago mediante Checkout Pro. Para que funcione, se debe configurar `MERCADOPAGO_ACCESS_TOKEN` como variable de entorno.
+La respuesta incluye un `linkPago` generado por Mercado Pago mediante Checkout Pro. Para que funcione, se debe configurar `MERCADOPAGO_ACCESS_TOKEN` como variable de entorno antes de iniciar Spring Boot. Para pruebas debe usarse una credencial de prueba de Mercado Pago.
+
+En esta version, el sistema guarda el pago como `PENDIENTE` y el administrador puede aprobarlo desde el panel. Como mejora futura se podria agregar un webhook para que Mercado Pago avise automaticamente cuando el pago fue aprobado.
 
 ## Validaciones y manejo de errores
 
@@ -437,14 +455,16 @@ Tambien cuenta con excepciones personalizadas y un `GlobalExceptionHandler` para
 - No puede crearse una reserva si ya existe otra reserva superpuesta para el mismo auto.
 - Un propietario no puede reservar su propio auto.
 - Las reservas manejan estados como `PENDIENTE`, `CONFIRMADA`, `CANCELADA` y `FINALIZADA`.
-- Solo se pueden confirmar reservas `PENDIENTE`.
-- Solo se pueden finalizar reservas `CONFIRMADA`.
-- No se pueden cancelar reservas `FINALIZADA`.
+- El propietario no aprueba reservas manualmente: el sistema valida disponibilidad automaticamente.
+- El propietario puede consultar las reservas recibidas por sus autos.
+- La reserva queda `PENDIENTE` cuando se crea y pasa a `CONFIRMADA` cuando se aprueba un pago valido.
+- Solo el administrador puede confirmar o finalizar reservas manualmente.
+- El cliente o el administrador pueden cancelar reservas, salvo que esten `FINALIZADA`.
 - Los pagos manejan estados como `PENDIENTE`, `APROBADO` y `RECHAZADO`.
 - El monto de un pago debe coincidir con el total de la reserva.
 - Un cliente solo puede pagar reservas propias.
 - Los pagos con tarjeta requieren datos basicos de tarjeta, pero esos datos no se guardan.
-- Los pagos con Mercado Pago crean una preferencia real de Checkout Pro y devuelven el link de pago.
+- Los pagos con Mercado Pago crean una preferencia de Checkout Pro y devuelven el link de pago cuando el token esta configurado.
 - Cliente, propietario y administrador solo pueden consultar pagos que les correspondan, salvo reportes administrativos.
 - No puede registrarse mas de un pago pendiente o aprobado para la misma reserva.
 - Solo se pueden aprobar o rechazar pagos `PENDIENTE`.
@@ -505,47 +525,80 @@ Todos usan la password:
 | Cliente | `cliente@test.com` | `123456` |
 | Propietario | `propietario@test.com` | `123456` |
 | Administrador | `admin@test.com` | `123456` |
+| Administrador y propietario | `adminprop@test.com` | `123456` |
 
-El script tambien crea un perfil de propietario verificado y un auto demo con patente `DEMO123`.
+El script tambien crea perfiles de propietario, autos, reservas, pagos, reviews e imagenes demo.
 
-## Despliegue
+Autos demo:
 
-Pendiente de configurar.
+| Propietario | Auto | Patente | Ciudad |
+|---|---|---|---|
+| `propietario@test.com` | Toyota Corolla | `DEMO123` | Buenos Aires |
+| `propietario@test.com` | Ford EcoSport | `PROP456` | Cordoba |
+| `adminprop@test.com` | Chevrolet Onix | `ADM111` | Buenos Aires |
+| `adminprop@test.com` | Tesla Model 3 | `ADM222` | Rosario |
 
-La consigna solicita entregar un enlace a la API desplegada. Una opcion posible es desplegar la aplicacion en Render, Railway o una plataforma similar, configurando una base de datos MySQL remota y variables de entorno para la conexion y el secreto JWT.
+El script deja reservas y pagos ya cargados para probar historiales. Tambien deja una reserva pendiente sin pago para probar el alta de un pago desde el panel cliente.
 
-Cuando el despliegue este disponible, agregar aca:
+## Despliegue local
 
-```text
-URL de la API desplegada: pendiente
-Swagger desplegado: pendiente
+Para la entrega, el proyecto puede ejecutarse localmente levantando MySQL y Spring Boot.
+
+Pasos resumidos:
+
+1. Levantar MySQL.
+2. Ejecutar `db_autoRent.sql`.
+3. Iniciar Spring Boot con `mvn spring-boot:run`.
+4. Abrir `http://localhost:8080/login.html`.
+5. Probar con los usuarios demo.
+
+Si se desea probar Mercado Pago, antes de iniciar Spring Boot se debe configurar la variable de entorno:
+
+```powershell
+$env:MERCADOPAGO_ACCESS_TOKEN="ACCESS_TOKEN_DE_PRUEBA"
 ```
 
-Checklist para completar el despliegue:
+Luego se inicia la aplicacion desde esa misma terminal.
+
+## Deploy externo
+
+Un deploy externo podria realizarse en Render, Railway u otra plataforma similar, usando una base de datos MySQL remota.
+
+Variables necesarias para un deploy:
+
+- `DB_URL`
+- `DB_USER`
+- `DB_PASSWORD`
+- `JWT_SECRET`
+- `JWT_EXPIRATION_MILLIS`
+- `DDL_AUTO`
+- `CORS_ALLOWED_ORIGINS`
+- `MERCADOPAGO_ACCESS_TOKEN`, si se desea usar Mercado Pago
+
+Checklist para deploy:
 
 - Crear una base de datos MySQL remota.
-- Configurar `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` y `CORS_ALLOWED_ORIGINS`.
-- Ejecutar el script `db_autoRent.sql` sobre la base remota.
-- Verificar `/swagger-ui.html` en la URL publica.
+- Ejecutar `db_autoRent.sql` sobre la base remota.
+- Configurar las variables de entorno.
+- Levantar la aplicacion.
+- Verificar `/swagger-ui.html`.
 - Probar login y un endpoint protegido con token.
 
-## Integrantes
+## Autor
 
-Pendiente de completar con los integrantes del grupo.
+Proyecto desarrollado de forma individual.
 
 ```text
-- Nombre Apellido:
-- Nombre Apellido:
-- Nombre Apellido:
-- Nombre Apellido:
-- Nombre Apellido:
+Maximo Luzkevich
 ```
 
 ## Aclaraciones para la correccion
 
-- El proyecto esta pensado como backend API REST.
+- El proyecto esta pensado principalmente como backend API REST.
+- Se incluye un frontend simple para demostrar los flujos principales.
 - La documentacion tecnica de endpoints se encuentra disponible mediante Swagger/OpenAPI.
 - La autenticacion se realiza mediante JWT.
 - La autorizacion se basa en roles.
 - El script SQL contiene la estructura de base de datos y datos iniciales.
-- Algunas mejoras pendientes recomendadas son ampliar tests y completar el despliegue.
+- Mercado Pago esta preparado mediante Checkout Pro usando access token por variable de entorno. La aprobacion automatica por webhook queda como mejora futura.
+- Algunas mejoras pendientes recomendadas son ampliar tests de integracion y completar un deploy externo.
