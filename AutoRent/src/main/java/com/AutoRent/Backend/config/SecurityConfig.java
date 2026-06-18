@@ -38,6 +38,23 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/login",
+                                "/login.html",
+                                "/registro",
+                                "/registro.html",
+                                "/admin",
+                                "/cliente",
+                                "/propietario-panel",
+                                "/panel-admin.html",
+                                "/panel-cliente.html",
+                                "/panel-propietario.html",
+                                "/panel.html",
+                                "/propietario.html",
+                                "/auto-alta.html",
+                                "/css/**",
+                                "/js/**",
                                 "/api/usuarios/registro",
                                 "/api/usuarios/login",
                                 "/v3/api-docs/**",
@@ -75,14 +92,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/autos/**").hasAnyRole("PROPIETARIO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/api/autos/*/imagenes").hasAnyRole("PROPIETARIO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/autos/*/imagenes/**").hasAnyRole("PROPIETARIO", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.POST, "/api/reviews/**").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/reviews/**")
+                        .hasAnyRole("CLIENTE", "PROPIETARIO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasAnyRole("CLIENTE", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.POST, "/api/reservas/**").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/reservas/**")
+                        .hasAnyRole("CLIENTE", "PROPIETARIO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/reservas/**")
                         .hasAnyRole("CLIENTE", "PROPIETARIO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/reservas/**")
                         .hasAnyRole("CLIENTE", "PROPIETARIO", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.POST, "/api/pagos/**").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/pagos", "/api/pagos/**")
+                        .hasAnyRole("CLIENTE", "PROPIETARIO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/pagos/**")
                         .hasAnyRole("CLIENTE", "PROPIETARIO", "ADMINISTRADOR")
                         .requestMatchers("/api/propietarios/**").authenticated()
