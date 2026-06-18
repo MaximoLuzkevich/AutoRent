@@ -174,7 +174,7 @@ public class ReservaService {
     @Transactional
     public ReservaRespuestaDto confirmarReserva(Integer idReserva) {
         Reserva reserva = obtenerReservaPorId(idReserva);
-        validarPropietarioOAdministrador(reserva);
+        validarAdministrador("Solo un administrador puede confirmar reservas");
         validarEstadoActual(reserva, EstadoReserva.PENDIENTE, "Solo se pueden confirmar reservas pendientes");
         reserva.setEstado(EstadoReserva.CONFIRMADA);
         return convertirARespuesta(reservaRepository.save(reserva));
@@ -183,7 +183,7 @@ public class ReservaService {
     @Transactional
     public ReservaRespuestaDto cancelarReserva(Integer idReserva) {
         Reserva reserva = obtenerReservaPorId(idReserva);
-        validarClientePropietarioOAdministrador(reserva);
+        validarClienteOAdministrador(reserva);
         if (reserva.getEstado() == EstadoReserva.CANCELADA) {
             throw new ParametroIncorrectoException("La reserva ya esta cancelada");
         }
@@ -197,7 +197,7 @@ public class ReservaService {
     @Transactional
     public ReservaRespuestaDto finalizarReserva(Integer idReserva) {
         Reserva reserva = obtenerReservaPorId(idReserva);
-        validarPropietarioOAdministrador(reserva);
+        validarAdministrador("Solo un administrador puede finalizar reservas");
         validarEstadoActual(reserva, EstadoReserva.CONFIRMADA, "Solo se pueden finalizar reservas confirmadas");
         reserva.setEstado(EstadoReserva.FINALIZADA);
         return convertirARespuesta(reservaRepository.save(reserva));
@@ -262,11 +262,11 @@ public class ReservaService {
         }
     }
 
-    private void validarPropietarioOAdministrador(Reserva reserva) {
+    private void validarClienteOAdministrador(Reserva reserva) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
-        Integer idPropietario = reserva.getAuto().getPropietario().getIdUsuario();
+        Integer idCliente = reserva.getCliente().getIdUsuario();
 
-        if (!idPropietario.equals(usuario.getIdUsuario())
+        if (!idCliente.equals(usuario.getIdUsuario())
                 && !usuarioService.tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
             throw new PermisoInsuficienteException("No podes modificar esta reserva");
         }

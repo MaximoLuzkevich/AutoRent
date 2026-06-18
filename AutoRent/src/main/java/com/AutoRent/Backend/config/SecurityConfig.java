@@ -97,6 +97,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasAnyRole("CLIENTE", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/api/reservas/**")
                         .hasAnyRole("CLIENTE", "PROPIETARIO", "ADMINISTRADOR")
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/reservas/*/confirmar",
+                                "/api/reservas/*/estado/confirmada",
+                                "/api/reservas/*/finalizar",
+                                "/api/reservas/*/estado/finalizada"
+                        ).hasRole("ADMINISTRADOR")
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/reservas/*/cancelar",
+                                "/api/reservas/*/estado/cancelada"
+                        ).hasAnyRole("CLIENTE", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/reservas/**")
                         .hasAnyRole("CLIENTE", "PROPIETARIO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/reservas/**")

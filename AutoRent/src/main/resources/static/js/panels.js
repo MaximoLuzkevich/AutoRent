@@ -310,11 +310,6 @@ function renderLista(contenedor, items, tipo) {
                 <strong>Reserva #${item.idReserva}</strong>
                 <span>${escapeHtml(item.nombreCliente || "Cliente")} - ${escapeHtml(item.estado)}</span>
                 <small>${item.fechaInicio} a ${item.fechaFin} - ${escapeHtml(item.auto || "Auto #" + item.idAuto)}</small>
-                <div class="d-flex gap-2 flex-wrap mt-2">
-                    <button class="btn btn-outline-success btn-sm" data-confirmar-reserva="${item.idReserva}">Confirmar</button>
-                    <button class="btn btn-outline-danger btn-sm" data-cancelar-reserva="${item.idReserva}">Cancelar</button>
-                    <button class="btn btn-outline-secondary btn-sm" data-finalizar-reserva="${item.idReserva}">Finalizar</button>
-                </div>
             </article>
         `;
     }).join("");
@@ -635,17 +630,7 @@ async function cargarHistorialAuto(event) {
 
 async function cargarReservasPendientes() {
     try {
-        renderLista(reservasPendientesResultado, await api("/reservas/me/propietario/pendientes"), "pendiente");
-    } catch (error) {
-        mostrarMensaje("danger", error.message);
-    }
-}
-
-async function cambiarEstadoReserva(idReserva, accion) {
-    try {
-        await api(`/reservas/${idReserva}/${accion}`, { method: "PUT" });
-        mostrarMensaje("success", "Reserva actualizada correctamente.");
-        await cargarReservasPendientes();
+        renderLista(reservasPendientesResultado, await api(`/reservas/propietario/${usuario.idUsuario}`), "pendiente");
     } catch (error) {
         mostrarMensaje("danger", error.message);
     }
@@ -883,24 +868,6 @@ imagenesResultado?.addEventListener("click", (event) => {
     const boton = event.target.closest("[data-eliminar-imagen]");
     if (boton) {
         eliminarImagen(Number(boton.dataset.idAuto), Number(boton.dataset.eliminarImagen));
-    }
-});
-
-reservasPendientesResultado?.addEventListener("click", (event) => {
-    const confirmar = event.target.closest("[data-confirmar-reserva]");
-    const cancelar = event.target.closest("[data-cancelar-reserva]");
-    const finalizar = event.target.closest("[data-finalizar-reserva]");
-
-    if (confirmar) {
-        cambiarEstadoReserva(Number(confirmar.dataset.confirmarReserva), "confirmar");
-    }
-
-    if (cancelar) {
-        cambiarEstadoReserva(Number(cancelar.dataset.cancelarReserva), "cancelar");
-    }
-
-    if (finalizar) {
-        cambiarEstadoReserva(Number(finalizar.dataset.finalizarReserva), "finalizar");
     }
 });
 
