@@ -23,16 +23,16 @@ public class FrontendController {
 
     @GetMapping("/cliente")
     public String cliente() {
-        return "forward:/panel-cliente.html";
+        return "forward:/cliente-inicio.html";
     }
 
     @GetMapping("/admin")
     public String admin() {
-        return "forward:/panel-admin.html";
+        return "forward:/admin-propietarios.html";
     }
 
     @GetMapping("/propietario-panel")
     public String propietarioPanel() {
-        return "forward:/panel-propietario.html";
+        return "forward:/propietario-autos.html";
     }
 }

@@ -47,10 +47,19 @@ public class SecurityConfig {
                                 "/admin",
                                 "/cliente",
                                 "/propietario-panel",
-                                "/panel-admin.html",
-                                "/panel-cliente.html",
-                                "/panel-propietario.html",
-                                "/panel.html",
+                                "/cliente-inicio.html",
+                                "/auto-detalle.html",
+                                "/cliente-reservas.html",
+                                "/cliente-pagos.html",
+                                "/cliente-perfil.html",
+                                "/propietario-autos.html",
+                                "/propietario-auto-detalle.html",
+                                "/propietario-solicitudes.html",
+                                "/propietario-pagos.html",
+                                "/propietario-perfil.html",
+                                "/admin-propietarios.html",
+                                "/admin-propietario-detalle.html",
+                                "/admin-pagos.html",
                                 "/propietario.html",
                                 "/auto-alta.html",
                                 "/css/**",
@@ -100,7 +109,10 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/reservas/*/confirmar",
-                                "/api/reservas/*/estado/confirmada",
+                                "/api/reservas/*/estado/confirmada"
+                        ).hasAnyRole("PROPIETARIO", "ADMINISTRADOR")
+                        .requestMatchers(
+                                HttpMethod.PUT,
                                 "/api/reservas/*/finalizar",
                                 "/api/reservas/*/estado/finalizada"
                         ).hasRole("ADMINISTRADOR")

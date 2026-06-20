@@ -31,15 +31,7 @@ function crearBody(form) {
 }
 
 function obtenerPanel() {
-    const usuarioActual = JSON.parse(localStorage.getItem("autorent_usuario") || "null");
-    const roles = usuarioActual?.roles || [];
-    if (roles.includes("ADMINISTRADOR")) {
-        return "panel-admin.html";
-    }
-    if (roles.includes("PROPIETARIO")) {
-        return "panel-propietario.html";
-    }
-    return "panel-cliente.html";
+    return "cliente-inicio.html";
 }
 
 async function enviarFormulario(url, body, method = "POST") {
