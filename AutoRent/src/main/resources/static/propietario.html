@@ -10,44 +10,67 @@
 <body class="auth-page">
 <main class="auth-shell">
     <section class="auth-card auth-card-wide">
-        <div class="auth-brand">
-            <span class="brand-mark">AR</span>
-            <div>
-                <h1>AutoRent</h1>
-                <p>Datos de propietario</p>
-            </div>
+        <div class="auth-split">
+            <aside class="auth-info">
+                <div>
+                    <div class="auth-brand">
+                        <span class="brand-mark">AR</span>
+                        <div>
+                            <h1>AutoRent</h1>
+                            <p>Perfil de propietario</p>
+                        </div>
+                    </div>
+                    <h2>Publica tus autos</h2>
+                    <p>Completa estos datos para sumar el rol propietario a tu usuario actual. Vas a seguir pudiendo usar acciones de cliente.</p>
+                </div>
+                <div class="auth-info-list">
+                    <span>Misma cuenta, mas permisos</span>
+                    <span>Gestion de autos publicados</span>
+                    <span>Reservas recibidas y pagos propios</span>
+                </div>
+            </aside>
+
+            <section>
+                <div class="auth-brand">
+                    <span class="brand-mark">AR</span>
+                    <div>
+                        <h1>Datos de propietario</h1>
+                        <p>Informacion fiscal y domicilio</p>
+                    </div>
+                </div>
+
+                <div id="mensaje" class="alert d-none" role="alert"></div>
+
+                <form id="propietarioForm" class="auth-form">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="dni" class="form-label">DNI</label>
+                            <input id="dni" name="dni" type="text" class="form-control" maxlength="30">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cuit" class="form-label">CUIT</label>
+                            <input id="cuit" name="cuit" type="text" class="form-control" maxlength="30">
+                        </div>
+                        <div class="col-12">
+                            <label for="direccion" class="form-label">Direccion</label>
+                            <input id="direccion" name="direccion" type="text" class="form-control" maxlength="150">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ciudad" class="form-label">Ciudad</label>
+                            <input id="ciudad" name="ciudad" type="text" class="form-control" maxlength="100">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="provincia" class="form-label">Provincia</label>
+                            <input id="provincia" name="provincia" type="text" class="form-control" maxlength="100">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100 mt-4" type="submit">Convertirme en propietario</button>
+                </form>
+
+                <p class="auth-link"><a id="volverPanel" href="cliente-inicio.html">Volver al inicio</a></p>
+            </section>
         </div>
-
-        <div id="mensaje" class="alert d-none" role="alert"></div>
-
-        <form id="propietarioForm" class="auth-form">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label for="dni" class="form-label">DNI</label>
-                    <input id="dni" name="dni" type="text" class="form-control" maxlength="30">
-                </div>
-                <div class="col-md-6">
-                    <label for="cuit" class="form-label">CUIT</label>
-                    <input id="cuit" name="cuit" type="text" class="form-control" maxlength="30">
-                </div>
-                <div class="col-12">
-                    <label for="direccion" class="form-label">Direccion</label>
-                    <input id="direccion" name="direccion" type="text" class="form-control" maxlength="150">
-                </div>
-                <div class="col-md-6">
-                    <label for="ciudad" class="form-label">Ciudad</label>
-                    <input id="ciudad" name="ciudad" type="text" class="form-control" maxlength="100">
-                </div>
-                <div class="col-md-6">
-                    <label for="provincia" class="form-label">Provincia</label>
-                    <input id="provincia" name="provincia" type="text" class="form-control" maxlength="100">
-                </div>
-            </div>
-
-            <button class="btn btn-primary w-100 mt-4" type="submit">Convertirme en propietario</button>
-        </form>
-
-        <p class="auth-link"><a id="volverPanel" href="panel-cliente.html">Volver al panel</a></p>
     </section>
 </main>
 <script src="js/forms.js"></script>
