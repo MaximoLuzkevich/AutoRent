@@ -49,7 +49,7 @@ El frontend estatico se encuentra en:
 AutoRent/src/main/resources/static
 ```
 
-Incluye pantallas de login, registro, panel de cliente, panel de propietario, panel de administrador, formulario para convertirse en propietario y formulario para publicar/modificar autos.
+Incluye pantallas de login, registro, inicio de alquileres, ficha de auto, reservas, pagos, perfil, vistas de propietario, vistas de administrador, formulario para convertirse en propietario y formulario para publicar/modificar autos.
 
 La idea principal es que los controllers reciban las peticiones HTTP, los services resuelvan las reglas de negocio, los repositories accedan a la base de datos y los DTOs eviten exponer directamente las entidades.
 
@@ -147,9 +147,14 @@ Pantallas principales del frontend:
 ```text
 Login: http://localhost:8080/login.html
 Registro: http://localhost:8080/registro.html
-Panel cliente: http://localhost:8080/panel-cliente.html
-Panel propietario: http://localhost:8080/panel-propietario.html
-Panel administrador: http://localhost:8080/panel-admin.html
+Inicio: http://localhost:8080/cliente-inicio.html
+Ficha de auto: http://localhost:8080/auto-detalle.html?id=1
+Mis reservas: http://localhost:8080/cliente-reservas.html
+Mis pagos: http://localhost:8080/cliente-pagos.html
+Mis autos: http://localhost:8080/propietario-autos.html
+Solicitudes de reserva: http://localhost:8080/propietario-solicitudes.html
+Propietarios admin: http://localhost:8080/admin-propietarios.html
+Pagos admin: http://localhost:8080/admin-pagos.html
 ```
 
 Importante: el frontend debe abrirse desde `http://localhost:8080/...` con Spring Boot levantado. No se recomienda abrir los archivos HTML directamente desde el explorador, porque las llamadas `fetch` necesitan comunicarse con la API del backend.
@@ -422,7 +427,7 @@ Para pagar con Mercado Pago:
 
 La respuesta incluye un `linkPago` generado por Mercado Pago mediante Checkout Pro. Para que funcione, se debe configurar `MERCADOPAGO_ACCESS_TOKEN` como variable de entorno antes de iniciar Spring Boot. Para pruebas debe usarse una credencial de prueba de Mercado Pago.
 
-En esta version, el sistema guarda el pago como `PENDIENTE` y el administrador puede aprobarlo desde el panel. Como mejora futura se podria agregar un webhook para que Mercado Pago avise automaticamente cuando el pago fue aprobado.
+En esta version, el sistema guarda el pago como `PENDIENTE` y el administrador puede aprobarlo desde la vista de pagos admin. Como mejora futura se podria agregar un webhook para que Mercado Pago avise automaticamente cuando el pago fue aprobado.
 
 ## Validaciones y manejo de errores
 
@@ -538,7 +543,7 @@ Autos demo:
 | `adminprop@test.com` | Chevrolet Onix | `ADM111` | Buenos Aires |
 | `adminprop@test.com` | Tesla Model 3 | `ADM222` | Rosario |
 
-El script deja reservas y pagos ya cargados para probar historiales. Tambien deja una reserva pendiente sin pago para probar el alta de un pago desde el panel cliente.
+El script deja reservas y pagos ya cargados para probar historiales. Tambien deja una reserva pendiente sin pago para probar el alta de un pago desde la vista de pagos del cliente.
 
 ## Despliegue local
 
