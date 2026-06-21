@@ -594,7 +594,7 @@ Checklist para deploy:
 Proyecto desarrollado de forma individual.
 
 ```text
-Maximo Luzkevich
+Maximo Rocco Luzkevich Marino
 ```
 
 ## Aclaraciones para la correccion
