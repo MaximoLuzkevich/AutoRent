@@ -16,7 +16,6 @@ public class CategoriaAutoService {
 
     private final CategoriaAutoRepository categoriaAutoRepository;
 
-
     public List<CategoriaAutoRespuestaDto> listarCategorias() {
         return categoriaAutoRepository.findAll().stream()
                 .map(this::convertirARespuesta)

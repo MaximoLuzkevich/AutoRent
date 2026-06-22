@@ -10,6 +10,7 @@ import com.AutoRent.Backend.exception.ParametroIncorrectoException;
 import com.AutoRent.Backend.exception.PermisoInsuficienteException;
 import com.AutoRent.Backend.model.Auto;
 import com.AutoRent.Backend.model.CategoriaAuto;
+import com.AutoRent.Backend.model.PerfilPropietario;
 import com.AutoRent.Backend.model.Usuario;
 import com.AutoRent.Backend.model.enums.EstadoReserva;
 import com.AutoRent.Backend.model.enums.NombreCategoriaAuto;
@@ -18,6 +19,7 @@ import com.AutoRent.Backend.model.enums.TipoCombustible;
 import com.AutoRent.Backend.model.enums.TipoTransmision;
 import com.AutoRent.Backend.repository.AutoRepository;
 import com.AutoRent.Backend.repository.CategoriaAutoRepository;
+import com.AutoRent.Backend.repository.PerfilPropietarioRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -29,8 +31,8 @@ public class AutoService {
 
     private final AutoRepository autoRepository;
     private final CategoriaAutoRepository categoriaAutoRepository;
+    private final PerfilPropietarioRepository perfilPropietarioRepository;
     private final UsuarioService usuarioService;
-
 
     public AutoRespuestaDto crearAutoAutenticado(AutoDto dto) {
         Usuario propietario = usuarioService.obtenerUsuarioAutenticado();
@@ -49,6 +51,7 @@ public class AutoService {
 
     private AutoRespuestaDto crearAutoParaPropietario(Usuario propietario, AutoDto dto) {
         validarPermisoParaPublicar(propietario);
+        validarUbicacionDelPropietario(propietario, dto);
 
         if (autoRepository.existsByPatenteIgnoreCase(dto.getPatente())) {
             throw new DatoDuplicadoException("La patente ya esta registrada");
@@ -204,6 +207,8 @@ public class AutoService {
     }
 
     private AutoRespuestaDto modificarAutoValidado(Auto auto, AutoDto dto) {
+        validarUbicacionDelPropietario(auto.getPropietario(), dto);
+
         if (!auto.getPatente().equalsIgnoreCase(dto.getPatente())
                 && autoRepository.existsByPatenteIgnoreCase(dto.getPatente())) {
             throw new DatoDuplicadoException("La patente ya esta registrada");
@@ -281,6 +286,31 @@ public class AutoService {
                 && !usuarioService.tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
             throw new PermisoInsuficienteException("No podes modificar este auto");
         }
+    }
+
+    private void validarUbicacionDelPropietario(Usuario propietario, AutoDto dto) {
+        PerfilPropietario perfil = perfilPropietarioRepository.findById(propietario.getIdUsuario())
+                .orElseThrow(() -> new ParametroIncorrectoException(
+                        "Para publicar autos primero tenes que cargar tus datos de propietario"
+                ));
+
+        if (!Boolean.TRUE.equals(perfil.getActivo())) {
+            throw new PermisoInsuficienteException("El perfil de propietario no esta activo");
+        }
+
+        if (!mismoTexto(dto.getCiudad(), perfil.getCiudad())
+                || !mismoTexto(dto.getProvincia(), perfil.getProvincia())) {
+            throw new ParametroIncorrectoException(
+                    "El auto debe publicarse en la misma ciudad y provincia del propietario"
+            );
+        }
+    }
+
+    private boolean mismoTexto(String primero, String segundo) {
+        String primeroNormalizado = normalizarTexto(primero);
+        String segundoNormalizado = normalizarTexto(segundo);
+
+        return primeroNormalizado != null && primeroNormalizado.equalsIgnoreCase(segundoNormalizado);
     }
 
     private boolean tieneRol(Usuario usuario, NombreRol nombreRol) {

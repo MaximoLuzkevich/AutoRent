@@ -29,7 +29,6 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-
     @PostMapping("/registro")
     public ResponseEntity<UsuarioRespuestaDto> registrarUsuario(@Valid @RequestBody RegistroUsuarioDto dto) {
         return ResponseEntity.ok(usuarioService.registrarUsuario(dto));
@@ -42,7 +41,7 @@ public class UsuarioController {
 
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> cerrarSesion() {
-        return ResponseEntity.ok(Map.of("mensaje", "Sesion cerrada. El cliente debe eliminar el token JWT."));
+        return ResponseEntity.ok(Map.of("mensaje", "Sesion cerrada correctamente."));
     }
 
     @GetMapping

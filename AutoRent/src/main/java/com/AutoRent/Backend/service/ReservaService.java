@@ -29,7 +29,6 @@ public class ReservaService {
     private final AutoRepository autoRepository;
     private final UsuarioService usuarioService;
 
-
     @Transactional
     public ReservaRespuestaDto crearReservaAutenticada(ReservaDto dto) {
         Usuario cliente = usuarioService.obtenerUsuarioAutenticado();

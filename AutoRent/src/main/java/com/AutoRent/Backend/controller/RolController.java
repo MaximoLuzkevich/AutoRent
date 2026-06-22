@@ -19,7 +19,6 @@ public class RolController {
 
     private final RolService rolService;
 
-
     @GetMapping
     public ResponseEntity<List<Rol>> listarRoles() {
         return ResponseEntity.ok(rolService.listarRoles());

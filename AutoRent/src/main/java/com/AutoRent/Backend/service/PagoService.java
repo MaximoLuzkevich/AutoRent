@@ -9,11 +9,13 @@ import com.AutoRent.Backend.exception.ParametroIncorrectoException;
 import com.AutoRent.Backend.exception.PermisoInsuficienteException;
 import com.AutoRent.Backend.model.Pago;
 import com.AutoRent.Backend.model.Reserva;
+import com.AutoRent.Backend.model.Usuario;
 import com.AutoRent.Backend.model.enums.EstadoPago;
 import com.AutoRent.Backend.model.enums.EstadoReserva;
 import com.AutoRent.Backend.model.enums.MetodoPago;
 import com.AutoRent.Backend.model.enums.NombreRol;
 import com.AutoRent.Backend.repository.PagoRepository;
+import com.mercadopago.resources.payment.Payment;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,7 +31,6 @@ public class PagoService {
     private final ReservaService reservaService;
     private final UsuarioService usuarioService;
     private final MercadoPagoService mercadoPagoService;
-
 
     @Transactional
     public PagoRespuestaDto registrarPago(PagoDto dto) {
@@ -124,6 +125,10 @@ public class PagoService {
     public List<PagoRespuestaDto> listarPagosEntreFechas(LocalDate desde, LocalDate hasta) {
         validarAdministrador("Solo un administrador puede consultar pagos por fechas");
 
+        if (desde == null || hasta == null) {
+            throw new ParametroIncorrectoException("Las fechas son obligatorias");
+        }
+
         if (hasta.isBefore(desde)) {
             throw new ParametroIncorrectoException("La fecha hasta no puede ser anterior a la fecha desde");
         }
@@ -152,6 +157,30 @@ public class PagoService {
         Pago pagoGuardado = pagoRepository.save(pago);
         reservaService.confirmarReservaPorPago(pagoGuardado.getReserva());
         return convertirARespuesta(pagoGuardado);
+    }
+
+    @Transactional
+    public PagoRespuestaDto procesarPagoMercadoPago(Long idPagoMercadoPago) {
+        Payment pagoMercadoPago = mercadoPagoService.obtenerPago(idPagoMercadoPago);
+        Integer idPago = obtenerIdPagoInterno(pagoMercadoPago);
+        Pago pago = obtenerPagoPorId(idPago);
+
+        if (pago.getMetodoPago() != MetodoPago.MERCADO_PAGO) {
+            throw new ParametroIncorrectoException("El pago no corresponde a Mercado Pago");
+        }
+
+        String estadoMercadoPago = pagoMercadoPago.getStatus();
+        if ("approved".equalsIgnoreCase(estadoMercadoPago)) {
+            return aprobarPagoConfirmadoPorMercadoPago(pago);
+        }
+
+        if ("rejected".equalsIgnoreCase(estadoMercadoPago)
+                || "cancelled".equalsIgnoreCase(estadoMercadoPago)) {
+            pago.setEstado(EstadoPago.RECHAZADO);
+            return convertirARespuesta(pagoRepository.save(pago));
+        }
+
+        return convertirARespuesta(pago);
     }
 
     @Transactional
@@ -185,11 +214,8 @@ public class PagoService {
     }
 
     private void validarReservaPuedePagarse(Reserva reserva) {
-        if (reserva.getEstado() == EstadoReserva.CANCELADA) {
-            throw new ParametroIncorrectoException("No se puede pagar una reserva cancelada");
-        }
-        if (reserva.getEstado() == EstadoReserva.FINALIZADA) {
-            throw new ParametroIncorrectoException("No se puede pagar una reserva finalizada");
+        if (reserva.getEstado() != EstadoReserva.CONFIRMADA) {
+            throw new ParametroIncorrectoException("Solo se pueden pagar reservas confirmadas por el propietario");
         }
     }
 
@@ -231,6 +257,35 @@ public class PagoService {
         return mercadoPagoService.crearPreferencia(pago);
     }
 
+    private PagoRespuestaDto aprobarPagoConfirmadoPorMercadoPago(Pago pago) {
+        if (pago.getEstado() == EstadoPago.APROBADO) {
+            return convertirARespuesta(pago);
+        }
+
+        validarPagoPendiente(pago);
+        validarReservaPuedePagarse(pago.getReserva());
+        validarMonto(pago.getReserva(), pago.getMonto());
+
+        pago.setEstado(EstadoPago.APROBADO);
+        Pago pagoGuardado = pagoRepository.save(pago);
+        reservaService.confirmarReservaPorPago(pagoGuardado.getReserva());
+        return convertirARespuesta(pagoGuardado);
+    }
+
+    private Integer obtenerIdPagoInterno(Payment pagoMercadoPago) {
+        if (pagoMercadoPago == null
+                || pagoMercadoPago.getExternalReference() == null
+                || pagoMercadoPago.getExternalReference().isBlank()) {
+            throw new ParametroIncorrectoException("Mercado Pago no informo el pago interno");
+        }
+
+        try {
+            return Integer.valueOf(pagoMercadoPago.getExternalReference());
+        } catch (NumberFormatException e) {
+            throw new ParametroIncorrectoException("La referencia de Mercado Pago no es valida");
+        }
+    }
+
     private boolean estaVacio(String texto) {
         return texto == null || texto.isBlank();
     }
@@ -258,7 +313,7 @@ public class PagoService {
     }
 
     private void validarClientePropietarioOAdministrador(Reserva reserva, String mensaje) {
-        var usuario = usuarioService.obtenerUsuarioAutenticado();
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
         Integer idUsuario = usuario.getIdUsuario();
         Integer idCliente = reserva.getCliente().getIdUsuario();
         Integer idPropietario = reserva.getAuto().getPropietario().getIdUsuario();
@@ -271,7 +326,7 @@ public class PagoService {
     }
 
     private void validarAdministrador(String mensaje) {
-        var usuario = usuarioService.obtenerUsuarioAutenticado();
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
 
         if (!usuarioService.tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
             throw new PermisoInsuficienteException(mensaje);

@@ -23,7 +23,6 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
-
     @PostMapping("/me")
     public ResponseEntity<ReviewRespuestaDto> crearMiReview(@Valid @RequestBody ReviewDto dto) {
         return ResponseEntity.ok(reviewService.crearReviewAutenticada(dto));

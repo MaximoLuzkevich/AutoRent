@@ -26,7 +26,6 @@ public class ReservaController {
 
     private final ReservaService reservaService;
 
-
     @PostMapping("/me")
     public ResponseEntity<ReservaRespuestaDto> crearMiReserva(@Valid @RequestBody ReservaDto dto) {
         return ResponseEntity.ok(reservaService.crearReservaAutenticada(dto));

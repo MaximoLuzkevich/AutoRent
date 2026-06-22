@@ -24,7 +24,6 @@ public class PerfilPropietarioController {
 
     private final PerfilPropietarioService perfilPropietarioService;
 
-
     @PostMapping("/me")
     public ResponseEntity<PerfilPropietarioRespuestaDto> crearMiPerfil(
             @Valid @RequestBody PerfilPropietarioDto dto

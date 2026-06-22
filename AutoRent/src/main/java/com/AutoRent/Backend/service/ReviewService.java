@@ -28,7 +28,6 @@ public class ReviewService {
     private final ReservaRepository reservaRepository;
     private final UsuarioService usuarioService;
 
-
     public ReviewRespuestaDto crearReviewAutenticada(ReviewDto dto) {
         Usuario cliente = usuarioService.obtenerUsuarioAutenticado();
         return crearReviewParaCliente(cliente, dto);
