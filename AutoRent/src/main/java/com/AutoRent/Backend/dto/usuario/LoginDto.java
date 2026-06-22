@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LoginDto {
 
-    @NotBlank
-    @Email
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El email no tiene un formato valido")
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "La contrasenia es obligatoria")
     private String password;
 }

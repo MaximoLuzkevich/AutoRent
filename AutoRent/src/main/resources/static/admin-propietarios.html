@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AutoRent - Propietarios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app-page" data-view="admin-propietarios">
+<div id="appNavbar"></div>
+
+<main class="app-container">
+    <div class="page-heading clean-heading">
+        <div>
+            <span>Administrador</span>
+            <h1>Propietarios registrados</h1>
+        </div>
+    </div>
+    <div id="mensaje" class="alert d-none" role="alert"></div>
+
+    <form id="adminOwnersFilter" class="filter-bar">
+        <select class="form-select" name="tipo">
+            <option value="nombre">Nombre</option>
+            <option value="ciudad">Ciudad</option>
+            <option value="provincia">Provincia</option>
+            <option value="verificados">Verificado true/false</option>
+            <option value="activos">Activo true/false</option>
+        </select>
+        <input class="form-control" name="valor" type="text">
+        <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+    </form>
+    <section id="adminOwners" class="stack-list"></section>
+</main>
+
+<script src="js/app.js"></script>
+</body>
+</html>

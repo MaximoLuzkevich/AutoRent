@@ -3,139 +3,159 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AutoRent - Publicar auto</title>
+    <title>AutoRent - Cargar auto</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="auth-page">
-<main class="auth-shell">
-    <section class="auth-card auth-card-wide">
-        <div class="auth-brand">
-            <span class="brand-mark">AR</span>
-            <div>
-                <h1>AutoRent</h1>
-                <p>Publicar o modificar auto</p>
-            </div>
+<body class="app-page" data-view="auto-alta">
+<div id="appNavbar"></div>
+
+<main class="app-container">
+    <div class="page-heading clean-heading">
+        <div>
+            <span>Mis autos / Nuevo auto</span>
+            <h1>Cargar nuevo auto</h1>
+            <p>Completa los datos del vehiculo para publicarlo en AutoRent.</p>
         </div>
+        <a class="btn btn-outline-primary" id="volverPanel" href="propietario-autos.html">Volver a mis autos</a>
+    </div>
 
-        <div id="mensaje" class="alert d-none" role="alert"></div>
+    <div id="mensaje" class="alert d-none" role="alert"></div>
 
-        <form id="autoForm" class="auth-form">
-            <div class="row g-3">
-                <div class="col-12">
-                    <label for="idAuto" class="form-label">ID auto para modificar</label>
-                    <input id="idAuto" name="idAuto" type="number" class="form-control" min="1" placeholder="Dejalo vacio para publicar un auto nuevo">
-                </div>
-                <div class="col-md-6">
-                    <label for="marca" class="form-label">Marca</label>
-                    <input id="marca" name="marca" type="text" class="form-control" maxlength="100" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="modelo" class="form-label">Modelo</label>
-                    <input id="modelo" name="modelo" type="text" class="form-control" maxlength="100" required>
-                </div>
-                <div class="col-md-4">
-                    <label for="anio" class="form-label">Anio</label>
-                    <input id="anio" name="anio" type="number" class="form-control" min="1900" required>
-                </div>
-                <div class="col-md-4">
-                    <label for="patente" class="form-label">Patente</label>
-                    <input id="patente" name="patente" type="text" class="form-control" maxlength="20" required>
-                </div>
-                <div class="col-md-4">
-                    <label for="color" class="form-label">Color</label>
-                    <input id="color" name="color" type="text" class="form-control" maxlength="50">
-                </div>
-                <div class="col-md-4">
-                    <label for="capacidadPasajeros" class="form-label">Pasajeros</label>
-                    <input id="capacidadPasajeros" name="capacidadPasajeros" type="number" class="form-control" min="1" required>
-                </div>
-                <div class="col-md-4">
-                    <label for="cantidadPuertas" class="form-label">Puertas</label>
-                    <input id="cantidadPuertas" name="cantidadPuertas" type="number" class="form-control" min="1" required>
-                </div>
-                <div class="col-md-4">
-                    <label for="precioDia" class="form-label">Precio por dia</label>
-                    <input id="precioDia" name="precioDia" type="number" class="form-control" min="1" step="0.01" required>
-                </div>
-                <div class="col-md-4">
-                    <label for="transmision" class="form-label">Transmision</label>
-                    <select id="transmision" name="transmision" class="form-select" required>
-                        <option value="MANUAL">Manual</option>
-                        <option value="AUTOMATICA">Automatica</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label for="combustible" class="form-label">Combustible</label>
-                    <select id="combustible" name="combustible" class="form-select" required>
-                        <option value="NAFTA">Nafta</option>
-                        <option value="DIESEL">Diesel</option>
-                        <option value="ELECTRICO">Electrico</option>
-                        <option value="HIBRIDO">Hibrido</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label for="categoria" class="form-label">Categoria</label>
-                    <select id="categoria" name="categoria" class="form-select" required>
-                        <option value="ECONOMICO">Economico</option>
-                        <option value="PREMIUM">Premium</option>
-                        <option value="SUV">SUV</option>
-                        <option value="ELECTRICO">Electrico</option>
-                        <option value="UTILITARIO">Utilitario</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label for="ciudad" class="form-label">Ciudad</label>
-                    <input id="ciudad" name="ciudad" type="text" class="form-control" maxlength="100" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="provincia" class="form-label">Provincia</label>
-                    <input id="provincia" name="provincia" type="text" class="form-control" maxlength="100">
-                </div>
-                <div class="col-12">
-                    <label for="direccionRetiro" class="form-label">Direccion de retiro</label>
-                    <input id="direccionRetiro" name="direccionRetiro" type="text" class="form-control" maxlength="150" required>
-                </div>
-                <div class="col-12">
-                    <label for="descripcion" class="form-label">Descripcion</label>
-                    <textarea id="descripcion" name="descripcion" class="form-control" rows="3"></textarea>
-                </div>
+    <section class="owner-layout publish-layout">
+        <div class="form-panel">
+            <div class="form-panel-title">
+                <span>Auto</span>
+                <span>Informacion del auto</span>
             </div>
 
-            <button class="btn btn-primary w-100 mt-4" type="submit">Guardar auto</button>
-        </form>
+            <form id="autoForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="marca" class="form-label">Marca <span class="required-star">*</span></label>
+                        <input id="marca" name="marca" type="text" class="form-control" maxlength="100" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="modelo" class="form-label">Modelo <span class="required-star">*</span></label>
+                        <input id="modelo" name="modelo" type="text" class="form-control" maxlength="100" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="anio" class="form-label">Anio <span class="required-star">*</span></label>
+                        <input id="anio" name="anio" type="number" class="form-control" min="1900" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="patente" class="form-label">Patente <span class="required-star">*</span></label>
+                        <input id="patente" name="patente" type="text" class="form-control" maxlength="20" required>
+                    </div>
 
-        <hr class="my-4">
+                    <div class="col-md-3">
+                        <label for="color" class="form-label">Color</label>
+                        <input id="color" name="color" type="text" class="form-control" maxlength="50">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="capacidadPasajeros" class="form-label">Pasajeros <span class="required-star">*</span></label>
+                        <input id="capacidadPasajeros" name="capacidadPasajeros" type="number" class="form-control" min="1" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="cantidadPuertas" class="form-label">Puertas <span class="required-star">*</span></label>
+                        <input id="cantidadPuertas" name="cantidadPuertas" type="number" class="form-control" min="1" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="precioDia" class="form-label">Precio por dia <span class="required-star">*</span></label>
+                        <input id="precioDia" name="precioDia" type="number" class="form-control" min="1" step="0.01" required>
+                    </div>
 
-        <form id="imagenForm" class="auth-form">
-            <h2 class="h5 mb-3">Agregar imagen al auto</h2>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label for="idAutoImagen" class="form-label">ID auto</label>
-                    <input id="idAutoImagen" name="idAuto" type="number" class="form-control" min="1" required>
-                </div>
-                <div class="col-md-8">
-                    <label for="nombreArchivo" class="form-label">Nombre</label>
-                    <input id="nombreArchivo" name="nombreArchivo" type="text" class="form-control" maxlength="255" placeholder="corolla-frente.jpg" required>
-                </div>
-                <div class="col-12">
-                    <label for="urlImagen" class="form-label">URL de imagen</label>
-                    <input id="urlImagen" name="urlImagen" type="url" class="form-control" maxlength="500" placeholder="https://..." required>
-                </div>
-                <div class="col-12">
-                    <div class="form-check">
-                        <input id="principal" name="principal" class="form-check-input" type="checkbox">
-                        <label for="principal" class="form-check-label">Marcar como imagen principal</label>
+                    <div class="col-md-4">
+                        <label for="transmision" class="form-label">Transmision <span class="required-star">*</span></label>
+                        <select id="transmision" name="transmision" class="form-select" required>
+                            <option value="MANUAL">Manual</option>
+                            <option value="AUTOMATICA">Automatica</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="combustible" class="form-label">Combustible <span class="required-star">*</span></label>
+                        <select id="combustible" name="combustible" class="form-select" required>
+                            <option value="NAFTA">Nafta</option>
+                            <option value="DIESEL">Diesel</option>
+                            <option value="ELECTRICO">Electrico</option>
+                            <option value="HIBRIDO">Hibrido</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="categoria" class="form-label">Categoria <span class="required-star">*</span></label>
+                        <select id="categoria" name="categoria" class="form-select" required>
+                            <option value="ECONOMICO">Economico</option>
+                            <option value="PREMIUM">Premium</option>
+                            <option value="SUV">SUV</option>
+                            <option value="ELECTRICO">Electrico</option>
+                            <option value="UTILITARIO">Utilitario</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="ciudad" class="form-label">Ciudad <span class="required-star">*</span></label>
+                        <input id="ciudad" name="ciudad" type="text" class="form-control" maxlength="100" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="provincia" class="form-label">Provincia <span class="required-star">*</span></label>
+                        <input id="provincia" name="provincia" type="text" class="form-control" maxlength="100" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="direccionRetiro" class="form-label">Direccion de retiro <span class="required-star">*</span></label>
+                        <input id="direccionRetiro" name="direccionRetiro" type="text" class="form-control" maxlength="150" required>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="descripcion" class="form-label">Descripcion</label>
+                        <textarea id="descripcion" name="descripcion" class="form-control" rows="4" maxlength="1000"></textarea>
                     </div>
                 </div>
+
+                <div class="form-actions">
+                    <a class="btn btn-outline-secondary px-4" href="propietario-autos.html">Cancelar</a>
+                    <button class="btn btn-primary px-4" type="submit">Confirmar y publicar</button>
+                </div>
+            </form>
+        </div>
+
+        <aside class="form-panel">
+            <div class="form-panel-title">
+                <span>IMG</span>
+                <span>Imagenes del auto</span>
             </div>
+            <p class="text-muted">Selecciona una o mas imagenes desde tu computadora. La primera se guarda como principal.</p>
 
-            <button class="btn btn-outline-primary w-100 mt-4" type="submit">Agregar imagen</button>
-        </form>
-
-        <p class="auth-link"><a id="volverPanel" href="panel-propietario.html">Volver al panel</a></p>
+            <form id="imagenForm" class="form-grid one-col">
+                <div class="upload-zone mb-2">
+                    <div id="imageUploadEmpty">
+                        <span class="upload-icon">IMG</span>
+                        <strong>Imagenes del vehiculo</strong>
+                    </div>
+                    <div id="imageUploadPreview" class="upload-preview d-none">
+                        <img id="mainImagePreview" src="" alt="Imagen principal">
+                        <div>
+                            <span>Imagen principal</span>
+                            <strong id="mainImageName"></strong>
+                        </div>
+                        <ul id="otherImagesList" class="upload-file-list"></ul>
+                    </div>
+                </div>
+                <input id="idAutoImagen" name="idAuto" type="hidden" required>
+                <div>
+                    <label for="fileImagen" class="form-label">Imagenes</label>
+                    <input id="fileImagen" name="file" type="file" class="form-control" accept="image/*" multiple required>
+                </div>
+                <div class="form-check">
+                    <input id="principal" name="principal" class="form-check-input" type="checkbox" checked>
+                    <label for="principal" class="form-check-label fw-semibold">Usar la primera imagen como principal</label>
+                </div>
+                <button class="btn btn-outline-primary w-100" type="submit">Subir mas imagenes</button>
+            </form>
+        </aside>
     </section>
 </main>
+
+<script src="js/app.js"></script>
 <script src="js/forms.js"></script>
 </body>
 </html>

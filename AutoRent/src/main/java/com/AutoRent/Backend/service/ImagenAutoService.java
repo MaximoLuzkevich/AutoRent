@@ -2,6 +2,7 @@ package com.AutoRent.Backend.service;
 
 import lombok.RequiredArgsConstructor;
 
+import com.AutoRent.Backend.dto.imagenauto.CloudinaryUploadResultado;
 import com.AutoRent.Backend.dto.imagenauto.ImagenAutoDto;
 import com.AutoRent.Backend.dto.imagenauto.ImagenAutoRespuestaDto;
 import com.AutoRent.Backend.exception.IdNoEncontradoException;
@@ -14,6 +15,7 @@ import com.AutoRent.Backend.model.enums.NombreRol;
 import com.AutoRent.Backend.repository.ImagenAutoRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +24,7 @@ public class ImagenAutoService {
     private final ImagenAutoRepository imagenAutoRepository;
     private final AutoService autoService;
     private final UsuarioService usuarioService;
-
+    private final CloudinaryService cloudinaryService;
 
     public ImagenAutoRespuestaDto agregarImagen(Integer idAuto, ImagenAutoDto dto) {
         Auto auto = autoService.obtenerAutoPorId(idAuto);
@@ -32,6 +34,22 @@ public class ImagenAutoService {
         imagen.setNombreArchivo(dto.getNombreArchivo());
         imagen.setUrlImagen(dto.getUrlImagen());
         imagen.setPrincipal(dto.getPrincipal());
+        imagen.setAuto(auto);
+
+        return convertirARespuesta(imagenAutoRepository.save(imagen));
+    }
+
+    public ImagenAutoRespuestaDto subirImagen(Integer idAuto, MultipartFile file, Boolean principal) {
+        Auto auto = autoService.obtenerAutoPorId(idAuto);
+        validarPropietarioOAdministrador(auto);
+
+        CloudinaryUploadResultado resultado = cloudinaryService.subirImagen(file);
+
+        ImagenAuto imagen = new ImagenAuto();
+        imagen.setNombreArchivo(resultado.getNombreArchivo());
+        imagen.setUrlImagen(resultado.getSecureUrl());
+        imagen.setPublicId(resultado.getPublicId());
+        imagen.setPrincipal(principal);
         imagen.setAuto(auto);
 
         return convertirARespuesta(imagenAutoRepository.save(imagen));
@@ -65,6 +83,7 @@ public class ImagenAutoService {
             throw new ParametroIncorrectoException("La imagen no pertenece al auto indicado");
         }
 
+        cloudinaryService.eliminarImagen(imagen.getPublicId());
         imagenAutoRepository.delete(imagen);
     }
 
@@ -82,6 +101,7 @@ public class ImagenAutoService {
                 imagen.getIdImagen(),
                 imagen.getNombreArchivo(),
                 imagen.getUrlImagen(),
+                imagen.getPublicId(),
                 imagen.getPrincipal(),
                 imagen.getFechaCarga(),
                 imagen.getAuto().getIdAuto()

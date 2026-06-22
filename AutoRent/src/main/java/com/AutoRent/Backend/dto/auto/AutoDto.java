@@ -18,55 +18,55 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AutoDto {
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank(message = "La marca es obligatoria")
+    @Size(max = 100, message = "La marca no puede superar los 100 caracteres")
     private String marca;
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank(message = "El modelo es obligatorio")
+    @Size(max = 100, message = "El modelo no puede superar los 100 caracteres")
     private String modelo;
 
-    @NotNull
+    @NotNull(message = "El anio es obligatorio")
     private Integer anio;
 
-    @NotBlank
-    @Size(max = 20)
+    @NotBlank(message = "La patente es obligatoria")
+    @Size(max = 20, message = "La patente no puede superar los 20 caracteres")
     private String patente;
 
-    @Size(max = 50)
+    @Size(max = 50, message = "El color no puede superar los 50 caracteres")
     private String color;
 
-    @NotNull
-    @Min(1)
+    @NotNull(message = "La cantidad de pasajeros es obligatoria")
+    @Min(value = 1, message = "La cantidad de pasajeros debe ser mayor a cero")
     private Integer capacidadPasajeros;
 
-    @NotNull
-    @Min(1)
+    @NotNull(message = "La cantidad de puertas es obligatoria")
+    @Min(value = 1, message = "La cantidad de puertas debe ser mayor a cero")
     private Integer cantidadPuertas;
 
-    @NotNull
+    @NotNull(message = "La transmision es obligatoria")
     private TipoTransmision transmision;
 
-    @NotNull
+    @NotNull(message = "El combustible es obligatorio")
     private TipoCombustible combustible;
 
-    @NotNull
-    @DecimalMin(value = "0.0", inclusive = false)
+    @NotNull(message = "El precio por dia es obligatorio")
+    @DecimalMin(value = "0.0", inclusive = false, message = "El precio por dia debe ser mayor a cero")
     private BigDecimal precioDia;
 
     private String descripcion;
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank(message = "La ciudad es obligatoria")
+    @Size(max = 100, message = "La ciudad no puede superar los 100 caracteres")
     private String ciudad;
 
-    @Size(max = 100)
+    @Size(max = 100, message = "La provincia no puede superar los 100 caracteres")
     private String provincia;
 
-    @NotBlank
-    @Size(max = 150)
+    @NotBlank(message = "La direccion de retiro es obligatoria")
+    @Size(max = 150, message = "La direccion de retiro no puede superar los 150 caracteres")
     private String direccionRetiro;
 
-    @NotNull
+    @NotNull(message = "La categoria es obligatoria")
     private NombreCategoriaAuto categoria;
 }

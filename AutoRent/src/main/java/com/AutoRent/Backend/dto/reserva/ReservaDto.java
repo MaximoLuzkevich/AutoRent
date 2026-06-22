@@ -11,12 +11,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ReservaDto {
 
-    @NotNull
+    @NotNull(message = "La fecha de inicio es obligatoria")
     private LocalDate fechaInicio;
 
-    @NotNull
+    @NotNull(message = "La fecha de fin es obligatoria")
     private LocalDate fechaFin;
 
-    @NotNull
+    @NotNull(message = "El auto es obligatorio")
     private Integer idAuto;
 }

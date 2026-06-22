@@ -9,32 +9,55 @@
 </head>
 <body class="auth-page">
 <main class="auth-shell">
-    <section class="auth-card">
-        <div class="auth-brand">
-            <span class="brand-mark">AR</span>
-            <div>
-                <h1>AutoRent</h1>
-                <p>Iniciar sesion</p>
-            </div>
+    <section class="auth-card auth-card-wide">
+        <div class="auth-split">
+            <aside class="auth-info">
+                <div>
+                    <div class="auth-brand">
+                        <span class="brand-mark">AR</span>
+                        <div>
+                            <h1>AutoRent</h1>
+                            <p>Alquiler de autos simple y seguro</p>
+                        </div>
+                    </div>
+                    <h2>Entra a tu cuenta</h2>
+                    <p>Accede a tus reservas, pagos, autos publicados o herramientas de administracion segun tus roles.</p>
+                </div>
+                <div class="auth-info-list">
+                    <span>Clientes: busqueda, reservas y pagos</span>
+                    <span>Propietarios: autos y reservas recibidas</span>
+                    <span>Administradores: gestion general</span>
+                </div>
+            </aside>
+
+            <section>
+                <div class="auth-brand">
+                    <span class="brand-mark">AR</span>
+                    <div>
+                        <h1>Iniciar sesion</h1>
+                        <p>Usa tu email y password</p>
+                    </div>
+                </div>
+
+                <div id="mensaje" class="alert d-none" role="alert"></div>
+
+                <form id="loginForm" class="auth-form">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input id="email" name="email" type="email" class="form-control" autocomplete="email" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input id="password" name="password" type="password" class="form-control" autocomplete="current-password" required>
+                    </div>
+
+                    <button class="btn btn-primary w-100" type="submit">Entrar</button>
+                </form>
+
+                <p class="auth-link">No tenes cuenta? <a href="registro.html">Registrarse</a></p>
+            </section>
         </div>
-
-        <div id="mensaje" class="alert d-none" role="alert"></div>
-
-        <form id="loginForm" class="auth-form">
-            <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input id="email" name="email" type="email" class="form-control" autocomplete="email" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input id="password" name="password" type="password" class="form-control" autocomplete="current-password" required>
-            </div>
-
-            <button class="btn btn-primary w-100" type="submit">Entrar</button>
-        </form>
-
-        <p class="auth-link">No tenes cuenta? <a href="registro.html">Registrarse</a></p>
     </section>
 </main>
 <script src="js/auth.js"></script>

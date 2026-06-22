@@ -19,7 +19,6 @@ public class CategoriaAutoController {
 
     private final CategoriaAutoService categoriaAutoService;
 
-
     @GetMapping
     public ResponseEntity<List<CategoriaAutoRespuestaDto>> listarCategorias() {
         return ResponseEntity.ok(categoriaAutoService.listarCategorias());

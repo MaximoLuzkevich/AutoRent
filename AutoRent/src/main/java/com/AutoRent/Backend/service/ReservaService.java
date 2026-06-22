@@ -29,7 +29,6 @@ public class ReservaService {
     private final AutoRepository autoRepository;
     private final UsuarioService usuarioService;
 
-
     @Transactional
     public ReservaRespuestaDto crearReservaAutenticada(ReservaDto dto) {
         Usuario cliente = usuarioService.obtenerUsuarioAutenticado();
@@ -174,7 +173,7 @@ public class ReservaService {
     @Transactional
     public ReservaRespuestaDto confirmarReserva(Integer idReserva) {
         Reserva reserva = obtenerReservaPorId(idReserva);
-        validarAdministrador("Solo un administrador puede confirmar reservas");
+        validarPropietarioOAdministrador(reserva);
         validarEstadoActual(reserva, EstadoReserva.PENDIENTE, "Solo se pueden confirmar reservas pendientes");
         reserva.setEstado(EstadoReserva.CONFIRMADA);
         return convertirARespuesta(reservaRepository.save(reserva));
@@ -281,6 +280,16 @@ public class ReservaService {
                 && !idPropietario.equals(usuario.getIdUsuario())
                 && !usuarioService.tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
             throw new PermisoInsuficienteException("No podes modificar esta reserva");
+        }
+    }
+
+    private void validarPropietarioOAdministrador(Reserva reserva) {
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        Integer idPropietario = reserva.getAuto().getPropietario().getIdUsuario();
+
+        if (!idPropietario.equals(usuario.getIdUsuario())
+                && !usuarioService.tieneRol(usuario, NombreRol.ADMINISTRADOR)) {
+            throw new PermisoInsuficienteException("Solo el propietario del auto o un administrador puede confirmar esta reserva");
         }
     }
 

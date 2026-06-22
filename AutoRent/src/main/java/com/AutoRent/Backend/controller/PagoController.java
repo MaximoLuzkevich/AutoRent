@@ -9,6 +9,7 @@ import com.AutoRent.Backend.service.PagoService;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -26,10 +28,43 @@ public class PagoController {
 
     private final PagoService pagoService;
 
-
     @PostMapping
     public ResponseEntity<PagoRespuestaDto> registrarPago(@Valid @RequestBody PagoDto dto) {
         return ResponseEntity.ok(pagoService.registrarPago(dto));
+    }
+
+    @PostMapping("/mercadopago/webhook")
+    public ResponseEntity<Void> recibirWebhookMercadoPago(
+            @RequestParam(required = false) String topic,
+            @RequestParam(required = false) String type,
+            @RequestParam(name = "id", required = false) String id,
+            @RequestBody(required = false) Map<String, Object> body
+    ) {
+        String tipoNotificacion = type != null ? type : topic;
+        if (tipoNotificacion != null && !"payment".equalsIgnoreCase(tipoNotificacion)) {
+            return ResponseEntity.ok().build();
+        }
+
+        Long idPagoMercadoPago = obtenerIdPagoMercadoPago(id, body);
+
+        if (idPagoMercadoPago != null) {
+            pagoService.procesarPagoMercadoPago(idPagoMercadoPago);
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/mercadopago/retorno")
+    public ResponseEntity<PagoRespuestaDto> confirmarRetornoMercadoPago(
+            @RequestParam(name = "payment_id", required = false) Long paymentId,
+            @RequestParam(name = "collection_id", required = false) Long collectionId
+    ) {
+        Long idPagoMercadoPago = paymentId != null ? paymentId : collectionId;
+        if (idPagoMercadoPago == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return ResponseEntity.ok(pagoService.procesarPagoMercadoPago(idPagoMercadoPago));
     }
 
     @GetMapping("/me")
@@ -93,5 +128,26 @@ public class PagoController {
     @PutMapping("/{idPago}/estado/rechazado")
     public ResponseEntity<PagoRespuestaDto> marcarPagoRechazado(@PathVariable Integer idPago) {
         return ResponseEntity.ok(pagoService.rechazarPago(idPago));
+    }
+
+    private Long obtenerIdPagoMercadoPago(String id, Map<String, Object> body) {
+        if (id != null && !id.isBlank()) {
+            return Long.valueOf(id);
+        }
+
+        if (body == null) {
+            return null;
+        }
+
+        Object data = body.get("data");
+        if (data instanceof Map<?, ?> dataMap) {
+            Object dataId = dataMap.get("id");
+            if (dataId != null) {
+                return Long.valueOf(dataId.toString());
+            }
+        }
+
+        Object bodyId = body.get("id");
+        return bodyId != null ? Long.valueOf(bodyId.toString()) : null;
     }
 }

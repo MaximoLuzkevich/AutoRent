@@ -31,7 +31,6 @@ public class AutoController {
 
     private final AutoService autoService;
 
-
     @PostMapping("/me")
     public ResponseEntity<AutoRespuestaDto> crearMiAuto(@Valid @RequestBody AutoDto dto) {
         return ResponseEntity.ok(autoService.crearAutoAutenticado(dto));

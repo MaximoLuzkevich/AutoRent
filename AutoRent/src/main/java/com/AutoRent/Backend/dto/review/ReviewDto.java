@@ -12,13 +12,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ReviewDto {
 
-    @NotNull
-    @Min(1)
-    @Max(5)
+    @NotNull(message = "La puntuacion es obligatoria")
+    @Min(value = 1, message = "La puntuacion minima es 1")
+    @Max(value = 5, message = "La puntuacion maxima es 5")
     private Integer puntuacion;
 
     private String comentario;
 
-    @NotNull
+    @NotNull(message = "El auto es obligatorio")
     private Integer idAuto;
 }

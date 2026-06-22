@@ -5,6 +5,7 @@ const mensaje = document.getElementById("mensaje");
 const propietarioForm = document.getElementById("propietarioForm");
 const autoForm = document.getElementById("autoForm");
 const imagenForm = document.getElementById("imagenForm");
+let archivosImagenSeleccionados = [];
 
 if (!token || !usuarioGuardado) {
     window.location.href = "login.html";
@@ -31,15 +32,15 @@ function crearBody(form) {
 }
 
 function obtenerPanel() {
-    const usuarioActual = JSON.parse(localStorage.getItem("autorent_usuario") || "null");
-    const roles = usuarioActual?.roles || [];
-    if (roles.includes("ADMINISTRADOR")) {
-        return "panel-admin.html";
-    }
-    if (roles.includes("PROPIETARIO")) {
-        return "panel-propietario.html";
-    }
-    return "panel-cliente.html";
+    return "cliente-inicio.html";
+}
+
+function debounce(fn, delay = 350) {
+    let timeoutId;
+    return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn(...args), delay);
+    };
 }
 
 async function enviarFormulario(url, body, method = "POST") {
@@ -62,6 +63,43 @@ async function enviarFormulario(url, body, method = "POST") {
     return data;
 }
 
+async function enviarMultipart(url, formData, method = "POST") {
+    const response = await fetch(`${API_BASE}${url}`, {
+        method,
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: formData
+    });
+
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : null;
+
+    if (!response.ok) {
+        throw new Error(data?.mensaje || data?.error || data?.message || "No se pudo guardar");
+    }
+
+    return data;
+}
+
+async function obtenerJson(url) {
+    const response = await fetch(`${API_BASE}${url}`, {
+        headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : null;
+
+    if (!response.ok) {
+        throw new Error(data?.mensaje || data?.error || data?.message || "No se pudo consultar");
+    }
+
+    return data;
+}
+
 async function refrescarUsuario() {
     const response = await fetch(`${API_BASE}/usuarios/me`, {
         headers: {
@@ -75,6 +113,169 @@ async function refrescarUsuario() {
 
     const usuario = await response.json();
     localStorage.setItem("autorent_usuario", JSON.stringify(usuario));
+}
+
+async function subirImagenesAuto(idAuto, archivos, principalPrimera = false) {
+    for (const [index, file] of archivos.entries()) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("principal", principalPrimera && index === 0);
+        await enviarMultipart(`/autos/${idAuto}/imagenes/upload`, formData);
+    }
+}
+
+function actualizarPreviewImagenes() {
+    if (!imagenForm) {
+        return;
+    }
+
+    const archivos = archivosImagenSeleccionados;
+    const estadoVacio = document.getElementById("imageUploadEmpty");
+    const preview = document.getElementById("imageUploadPreview");
+    const imagenPrincipal = document.getElementById("mainImagePreview");
+    const nombrePrincipal = document.getElementById("mainImageName");
+    const lista = document.getElementById("otherImagesList");
+
+    if (!estadoVacio || !preview || !imagenPrincipal || !nombrePrincipal || !lista) {
+        return;
+    }
+
+    if (!archivos.length) {
+        estadoVacio.classList.remove("d-none");
+        preview.classList.add("d-none");
+        imagenPrincipal.removeAttribute("src");
+        nombrePrincipal.textContent = "";
+        lista.innerHTML = "";
+        return;
+    }
+
+    const [principal, ...otras] = archivos;
+    estadoVacio.classList.add("d-none");
+    preview.classList.remove("d-none");
+    imagenPrincipal.src = URL.createObjectURL(principal);
+    nombrePrincipal.textContent = principal.name;
+    lista.innerHTML = otras.length
+        ? otras.map((archivo, index) => `
+            <li>
+                <span>${escapeHtml(archivo.name)}</span>
+                <button class="btn btn-outline-danger btn-sm" type="button" data-remove-upload="${index + 1}">
+                    Eliminar
+                </button>
+            </li>
+        `).join("")
+        : `<li>No seleccionaste imagenes secundarias.</li>`;
+}
+
+function sincronizarInputImagenes() {
+    if (!imagenForm) {
+        return;
+    }
+
+    const dataTransfer = new DataTransfer();
+    archivosImagenSeleccionados.forEach((archivo) => dataTransfer.items.add(archivo));
+    imagenForm.elements.file.files = dataTransfer.files;
+}
+
+function cargarArchivosSeleccionados() {
+    if (!imagenForm) {
+        return;
+    }
+
+    archivosImagenSeleccionados = [...imagenForm.elements.file.files];
+    actualizarPreviewImagenes();
+}
+
+function limpiarArchivosSeleccionados() {
+    archivosImagenSeleccionados = [];
+    sincronizarInputImagenes();
+    actualizarPreviewImagenes();
+}
+
+function configurarAutocompletesLugares() {
+    document.querySelectorAll("input[name='ciudad'], input[name='provincia']").forEach((input) => {
+        if (input.dataset.geoapifyReady === "true") {
+            return;
+        }
+
+        input.dataset.geoapifyReady = "true";
+        const form = input.closest("form");
+        const ciudadInput = form?.querySelector("input[name='ciudad']");
+        const provinciaInput = form?.querySelector("input[name='provincia']");
+        const wrapper = input.parentElement;
+        wrapper?.classList.add("autocomplete-wrap");
+
+        const lista = document.createElement("div");
+        lista.className = "autocomplete-list d-none";
+        wrapper?.appendChild(lista);
+
+        const buscar = debounce(async () => {
+            const texto = input.value.trim();
+            if (texto.length < 2) {
+                ocultarSugerencias(lista);
+                return;
+            }
+
+            try {
+                const lugares = await obtenerJson(`/lugares/autocomplete?texto=${encodeURIComponent(texto)}`);
+                renderSugerenciasLugar(lista, input, ciudadInput, provinciaInput, lugares);
+            } catch (error) {
+                ocultarSugerencias(lista);
+            }
+        });
+
+        input.addEventListener("input", buscar);
+        input.addEventListener("blur", () => {
+            setTimeout(() => ocultarSugerencias(lista), 160);
+        });
+    });
+}
+
+function renderSugerenciasLugar(lista, input, ciudadInput, provinciaInput, lugares) {
+    if (!lugares.length) {
+        ocultarSugerencias(lista);
+        return;
+    }
+
+    const esProvincia = input.name === "provincia";
+    lista.innerHTML = lugares.map((lugar) => `
+        <button type="button">
+            <strong>${escapeHtml(esProvincia ? (lugar.provincia || lugar.ciudad) : lugar.ciudad)}</strong>
+            <span>${escapeHtml(lugar.textoCompleto || lugar.pais || lugar.provincia || "")}</span>
+        </button>
+    `).join("");
+    lista.classList.remove("d-none");
+
+    lista.querySelectorAll("button").forEach((button, index) => {
+        button.addEventListener("click", () => {
+            const lugar = lugares[index];
+            if (esProvincia) {
+                input.value = lugar.provincia || lugar.ciudad || "";
+                if (ciudadInput && ciudadInput !== input && !ciudadInput.value && lugar.ciudad) {
+                    ciudadInput.value = lugar.ciudad;
+                }
+            } else {
+                input.value = lugar.ciudad || "";
+            }
+            if (provinciaInput && provinciaInput !== input) {
+                provinciaInput.value = lugar.provincia || "";
+            }
+            ocultarSugerencias(lista);
+        });
+    });
+}
+
+function ocultarSugerencias(lista) {
+    lista.classList.add("d-none");
+    lista.innerHTML = "";
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
 if (propietarioForm) {
@@ -99,17 +300,30 @@ if (autoForm) {
         event.preventDefault();
 
         try {
-            const idAuto = autoForm.elements.idAuto.value;
+            const idAuto = autoForm.elements.idAuto?.value || "";
+            const archivos = imagenForm ? archivosImagenSeleccionados : [];
+            if (!idAuto && imagenForm && !archivos.length) {
+                throw new Error("Para publicar un auto tenes que seleccionar al menos una imagen.");
+            }
+
             const url = idAuto ? `/autos/${idAuto}/me` : "/autos/me";
             const method = idAuto ? "PUT" : "POST";
             const auto = await enviarFormulario(url, crearBody(autoForm), method);
+            if (imagenForm) {
+                imagenForm.elements.idAuto.value = auto.idAuto;
+                if (archivos.length) {
+                    await subirImagenesAuto(auto.idAuto, archivos, !idAuto || imagenForm.elements.principal.checked);
+                }
+            }
             mostrarMensaje("success", idAuto
                 ? `Auto modificado correctamente. ID: ${auto.idAuto}`
                 : `Auto publicado correctamente. ID: ${auto.idAuto}`);
-            if (imagenForm) {
-                imagenForm.elements.idAuto.value = auto.idAuto;
-            }
             autoForm.reset();
+            if (imagenForm) {
+                imagenForm.reset();
+                imagenForm.elements.idAuto.value = auto.idAuto;
+                limpiarArchivosSeleccionados();
+            }
         } catch (error) {
             mostrarMensaje("danger", error.message);
         }
@@ -121,20 +335,41 @@ if (imagenForm) {
         event.preventDefault();
 
         const idAuto = imagenForm.elements.idAuto.value;
-        const body = {
-            nombreArchivo: imagenForm.elements.nombreArchivo.value,
-            urlImagen: imagenForm.elements.urlImagen.value,
-            principal: imagenForm.elements.principal.checked
-        };
+        const archivos = archivosImagenSeleccionados;
+        if (!idAuto) {
+            mostrarMensaje("warning", "Primero tenes que publicar o indicar un auto.");
+            return;
+        }
+        if (!archivos.length) {
+            mostrarMensaje("warning", "Selecciona al menos una imagen.");
+            return;
+        }
 
         try {
-            const imagen = await enviarFormulario(`/autos/${idAuto}/imagenes`, body);
-            mostrarMensaje("success", `Imagen agregada correctamente. ID: ${imagen.idImagen}`);
+            await subirImagenesAuto(idAuto, archivos, imagenForm.elements.principal.checked);
+            mostrarMensaje("success", "Imagenes subidas correctamente.");
             imagenForm.reset();
+            limpiarArchivosSeleccionados();
         } catch (error) {
             mostrarMensaje("danger", error.message);
         }
     });
+
+    imagenForm.elements.file?.addEventListener("change", cargarArchivosSeleccionados);
+    imagenForm.addEventListener("reset", () => {
+        setTimeout(limpiarArchivosSeleccionados, 0);
+    });
+    imagenForm.addEventListener("click", (event) => {
+        const boton = event.target.closest("[data-remove-upload]");
+        if (!boton) {
+            return;
+        }
+
+        archivosImagenSeleccionados.splice(Number(boton.dataset.removeUpload), 1);
+        sincronizarInputImagenes();
+        actualizarPreviewImagenes();
+    });
 }
 
 document.getElementById("volverPanel")?.setAttribute("href", obtenerPanel());
+configurarAutocompletesLugares();

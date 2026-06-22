@@ -1,1 +1,16 @@
+# Compilados
+target/
+AutoRent/target/
+
+# Logs locales
 spring-boot-run*.log
+*.log
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Configuracion local
+.env
+*.env

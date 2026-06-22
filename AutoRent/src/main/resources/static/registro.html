@@ -9,42 +9,65 @@
 </head>
 <body class="auth-page">
 <main class="auth-shell">
-    <section class="auth-card">
-        <div class="auth-brand">
-            <span class="brand-mark">AR</span>
-            <div>
-                <h1>AutoRent</h1>
-                <p>Registro</p>
-            </div>
+    <section class="auth-card auth-card-wide">
+        <div class="auth-split">
+            <aside class="auth-info">
+                <div>
+                    <div class="auth-brand">
+                        <span class="brand-mark">AR</span>
+                        <div>
+                            <h1>AutoRent</h1>
+                            <p>Crea tu usuario cliente</p>
+                        </div>
+                    </div>
+                    <h2>Registrate gratis</h2>
+                    <p>Al crear tu cuenta podes buscar autos, hacer reservas y mas adelante convertirte en propietario.</p>
+                </div>
+                <div class="auth-info-list">
+                    <span>Un usuario puede tener varios roles</span>
+                    <span>Las contrasenas se guardan encriptadas</span>
+                    <span>El acceso se maneja con JWT</span>
+                </div>
+            </aside>
+
+            <section>
+                <div class="auth-brand">
+                    <span class="brand-mark">AR</span>
+                    <div>
+                        <h1>Crear cuenta</h1>
+                        <p>Completa tus datos personales</p>
+                    </div>
+                </div>
+
+                <div id="mensaje" class="alert d-none" role="alert"></div>
+
+                <form id="registroForm" class="auth-form">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre</label>
+                        <input id="nombre" name="nombre" type="text" class="form-control" autocomplete="name" maxlength="100" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input id="email" name="email" type="email" class="form-control" autocomplete="email" maxlength="150" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="telefono" class="form-label">Telefono</label>
+                        <input id="telefono" name="telefono" type="text" class="form-control" autocomplete="tel" maxlength="30">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input id="password" name="password" type="password" class="form-control" autocomplete="new-password" minlength="6" maxlength="100" required>
+                    </div>
+
+                    <button class="btn btn-primary w-100" type="submit">Crear cuenta</button>
+                </form>
+
+                <p class="auth-link">Ya tenes cuenta? <a href="login.html">Iniciar sesion</a></p>
+            </section>
         </div>
-
-        <div id="mensaje" class="alert d-none" role="alert"></div>
-
-        <form id="registroForm" class="auth-form">
-            <div class="mb-3">
-                <label for="nombre" class="form-label">Nombre</label>
-                <input id="nombre" name="nombre" type="text" class="form-control" autocomplete="name" maxlength="100" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input id="email" name="email" type="email" class="form-control" autocomplete="email" maxlength="150" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="telefono" class="form-label">Telefono</label>
-                <input id="telefono" name="telefono" type="text" class="form-control" autocomplete="tel" maxlength="30">
-            </div>
-
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input id="password" name="password" type="password" class="form-control" autocomplete="new-password" minlength="6" maxlength="100" required>
-            </div>
-
-            <button class="btn btn-primary w-100" type="submit">Crear cuenta</button>
-        </form>
-
-        <p class="auth-link">Ya tenes cuenta? <a href="login.html">Iniciar sesion</a></p>
     </section>
 </main>
 <script src="js/auth.js"></script>

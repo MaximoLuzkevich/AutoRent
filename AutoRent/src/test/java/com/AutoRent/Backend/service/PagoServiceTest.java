@@ -8,9 +8,9 @@ import static org.mockito.Mockito.when;
 
 import com.AutoRent.Backend.dto.pago.PagoDto;
 import com.AutoRent.Backend.dto.pago.PagoRespuestaDto;
-import com.AutoRent.Backend.model.Pago;
 import com.AutoRent.Backend.exception.ParametroIncorrectoException;
 import com.AutoRent.Backend.exception.PermisoInsuficienteException;
+import com.AutoRent.Backend.model.Pago;
 import com.AutoRent.Backend.model.Reserva;
 import com.AutoRent.Backend.model.Usuario;
 import com.AutoRent.Backend.model.enums.EstadoReserva;
@@ -43,16 +43,9 @@ class PagoServiceTest {
 
     @Test
     void registrarPagoConMontoDistintoAlTotalLanzaParametroIncorrecto() {
-        Reserva reserva = new Reserva();
-        Usuario cliente = new Usuario();
-        cliente.setIdUsuario(1);
-
-        reserva.setIdReserva(1);
-        reserva.setEstado(EstadoReserva.PENDIENTE);
-        reserva.setPrecioTotal(BigDecimal.valueOf(40000));
-        reserva.setCliente(cliente);
-
-        PagoDto dto = new PagoDto(BigDecimal.valueOf(30000), MetodoPago.TARJETA, 1);
+        Usuario cliente = crearUsuario(1);
+        Reserva reserva = crearReservaConfirmada(cliente);
+        PagoDto dto = crearPagoDto(BigDecimal.valueOf(30000), MetodoPago.TARJETA);
 
         when(reservaService.obtenerReservaPorId(1)).thenReturn(reserva);
         when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(cliente);
@@ -62,19 +55,10 @@ class PagoServiceTest {
 
     @Test
     void registrarPagoDeReservaAjenaLanzaPermisoInsuficiente() {
-        Usuario clienteReserva = new Usuario();
-        clienteReserva.setIdUsuario(1);
-
-        Usuario otroCliente = new Usuario();
-        otroCliente.setIdUsuario(2);
-
-        Reserva reserva = new Reserva();
-        reserva.setIdReserva(1);
-        reserva.setEstado(EstadoReserva.PENDIENTE);
-        reserva.setPrecioTotal(BigDecimal.valueOf(40000));
-        reserva.setCliente(clienteReserva);
-
-        PagoDto dto = new PagoDto(BigDecimal.valueOf(40000), MetodoPago.TARJETA, 1);
+        Usuario clienteReserva = crearUsuario(1);
+        Usuario otroCliente = crearUsuario(2);
+        Reserva reserva = crearReservaConfirmada(clienteReserva);
+        PagoDto dto = crearPagoDto(BigDecimal.valueOf(40000), MetodoPago.TARJETA);
 
         when(reservaService.obtenerReservaPorId(1)).thenReturn(reserva);
         when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(otroCliente);
@@ -84,16 +68,9 @@ class PagoServiceTest {
 
     @Test
     void registrarPagoConTarjetaSinDatosLanzaParametroIncorrecto() {
-        Usuario cliente = new Usuario();
-        cliente.setIdUsuario(1);
-
-        Reserva reserva = new Reserva();
-        reserva.setIdReserva(1);
-        reserva.setEstado(EstadoReserva.PENDIENTE);
-        reserva.setPrecioTotal(BigDecimal.valueOf(40000));
-        reserva.setCliente(cliente);
-
-        PagoDto dto = new PagoDto(BigDecimal.valueOf(40000), MetodoPago.TARJETA, 1);
+        Usuario cliente = crearUsuario(1);
+        Reserva reserva = crearReservaConfirmada(cliente);
+        PagoDto dto = crearPagoDto(BigDecimal.valueOf(40000), MetodoPago.TARJETA);
 
         when(reservaService.obtenerReservaPorId(1)).thenReturn(reserva);
         when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(cliente);
@@ -103,16 +80,9 @@ class PagoServiceTest {
 
     @Test
     void registrarPagoConMercadoPagoDevuelveLinkDePreferencia() {
-        Usuario cliente = new Usuario();
-        cliente.setIdUsuario(1);
-
-        Reserva reserva = new Reserva();
-        reserva.setIdReserva(1);
-        reserva.setEstado(EstadoReserva.PENDIENTE);
-        reserva.setPrecioTotal(BigDecimal.valueOf(40000));
-        reserva.setCliente(cliente);
-
-        PagoDto dto = new PagoDto(BigDecimal.valueOf(40000), MetodoPago.MERCADO_PAGO, 1);
+        Usuario cliente = crearUsuario(1);
+        Reserva reserva = crearReservaConfirmada(cliente);
+        PagoDto dto = crearPagoDto(BigDecimal.valueOf(40000), MetodoPago.MERCADO_PAGO);
 
         when(reservaService.obtenerReservaPorId(1)).thenReturn(reserva);
         when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(cliente);
@@ -129,9 +99,21 @@ class PagoServiceTest {
     }
 
     @Test
+    void registrarPagoDeReservaPendienteLanzaParametroIncorrecto() {
+        Usuario cliente = crearUsuario(1);
+        Reserva reserva = crearReservaConfirmada(cliente);
+        reserva.setEstado(EstadoReserva.PENDIENTE);
+        PagoDto dto = crearPagoDto(BigDecimal.valueOf(40000), MetodoPago.EFECTIVO);
+
+        when(reservaService.obtenerReservaPorId(1)).thenReturn(reserva);
+        when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(cliente);
+
+        assertThrows(ParametroIncorrectoException.class, () -> pagoService.registrarPago(dto));
+    }
+
+    @Test
     void aprobarPagoSinRolAdministradorLanzaPermisoInsuficiente() {
-        Usuario cliente = new Usuario();
-        cliente.setIdUsuario(1);
+        Usuario cliente = crearUsuario(1);
 
         when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(cliente);
 
@@ -145,5 +127,24 @@ class PagoServiceTest {
                 .validarUsuarioActualOAdministrador(2, "No podes consultar pagos de otro propietario");
 
         assertThrows(PermisoInsuficienteException.class, () -> pagoService.listarPagosPorPropietario(2));
+    }
+
+    private Usuario crearUsuario(Integer idUsuario) {
+        Usuario usuario = new Usuario();
+        usuario.setIdUsuario(idUsuario);
+        return usuario;
+    }
+
+    private Reserva crearReservaConfirmada(Usuario cliente) {
+        Reserva reserva = new Reserva();
+        reserva.setIdReserva(1);
+        reserva.setEstado(EstadoReserva.CONFIRMADA);
+        reserva.setPrecioTotal(BigDecimal.valueOf(40000));
+        reserva.setCliente(cliente);
+        return reserva;
+    }
+
+    private PagoDto crearPagoDto(BigDecimal monto, MetodoPago metodoPago) {
+        return new PagoDto(monto, metodoPago, 1);
     }
 }

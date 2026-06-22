@@ -17,27 +17,29 @@ function obtenerError(data, fallback) {
 }
 
 function obtenerPanel(usuario) {
-    const roles = usuario?.roles || [];
-    if (roles.includes("ADMINISTRADOR")) {
-        return "panel-admin.html";
-    }
-    if (roles.includes("PROPIETARIO")) {
-        return "panel-propietario.html";
-    }
-    return "panel-cliente.html";
+    return "cliente-inicio.html";
 }
 
 async function enviarJson(url, body) {
     const response = await fetch(`${API_BASE}${url}`, {
         method: "POST",
         headers: {
+            "Accept": "application/json",
             "Content-Type": "application/json"
         },
         body: JSON.stringify(body)
     });
 
     const text = await response.text();
-    const data = text ? JSON.parse(text) : null;
+    let data = null;
+
+    if (text) {
+        try {
+            data = JSON.parse(text);
+        } catch (error) {
+            throw new Error("La API devolvio HTML en vez de JSON. Abri el frontend desde http://localhost:8080/login.html y verifica que Spring Boot este levantado.");
+        }
+    }
 
     if (!response.ok) {
         throw new Error(obtenerError(data, "No se pudo completar la operacion"));

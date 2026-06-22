@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AutoRent - Pagos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app-page" data-view="pagos">
+<div id="appNavbar"></div>
+
+<main class="app-container">
+    <div class="page-heading clean-heading">
+        <div>
+            <span>Cliente</span>
+            <h1>Mis pagos</h1>
+        </div>
+    </div>
+    <div id="mensaje" class="alert d-none" role="alert"></div>
+
+    <section class="split-view">
+        <div class="form-surface">
+            <div class="section-heading">
+                <div>
+                    <span>Nuevo pago</span>
+                    <h2>Registrar pago</h2>
+                </div>
+            </div>
+            <form id="pagoForm" class="form-grid one-col">
+                <div>
+                    <label class="form-label" for="idReserva">ID reserva</label>
+                    <input class="form-control" id="idReserva" name="idReserva" type="number" min="1" required>
+                </div>
+                <div>
+                    <label class="form-label" for="monto">Monto</label>
+                    <input class="form-control" id="monto" name="monto" type="number" min="1" step="0.01" required>
+                </div>
+                <div>
+                    <label class="form-label" for="metodoPago">Metodo de pago</label>
+                    <select class="form-select" id="metodoPago" name="metodoPago" required>
+                        <option value="EFECTIVO">Efectivo</option>
+                        <option value="MERCADO_PAGO">Mercado Pago</option>
+                        <option value="TARJETA">Tarjeta</option>
+                    </select>
+                </div>
+                <div id="cardFields" class="form-grid one-col d-none">
+                    <div>
+                        <label class="form-label" for="titularTarjeta">Titular tarjeta</label>
+                        <input class="form-control" id="titularTarjeta" name="titularTarjeta" type="text">
+                    </div>
+                    <div>
+                        <label class="form-label" for="numeroTarjeta">Numero tarjeta</label>
+                        <input class="form-control" id="numeroTarjeta" name="numeroTarjeta" type="text">
+                    </div>
+                    <div class="form-grid">
+                        <div>
+                            <label class="form-label" for="vencimientoTarjeta">Vencimiento</label>
+                            <input class="form-control" id="vencimientoTarjeta" name="vencimientoTarjeta" type="text">
+                        </div>
+                        <div>
+                            <label class="form-label" for="codigoSeguridad">Codigo</label>
+                            <input class="form-control" id="codigoSeguridad" name="codigoSeguridad" type="text">
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" type="submit">Confirmar pago</button>
+            </form>
+        </div>
+        <section>
+            <div class="section-heading">
+                <div>
+                    <span>Historial</span>
+                    <h2>Pagos registrados</h2>
+                </div>
+            </div>
+            <div id="pagosList" class="stack-list"></div>
+        </section>
+    </section>
+</main>
+
+<script src="js/app.js"></script>
+</body>
+</html>

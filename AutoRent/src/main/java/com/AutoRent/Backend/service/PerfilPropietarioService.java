@@ -21,7 +21,6 @@ public class PerfilPropietarioService {
     private final PerfilPropietarioRepository perfilPropietarioRepository;
     private final UsuarioService usuarioService;
 
-
     @Transactional
     public PerfilPropietarioRespuestaDto crearMiPerfil(PerfilPropietarioDto dto) {
         Usuario usuario = usuarioService.obtenerUsuarioAutenticado();

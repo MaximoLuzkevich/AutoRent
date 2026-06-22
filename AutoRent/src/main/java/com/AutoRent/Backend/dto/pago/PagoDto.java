@@ -13,14 +13,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PagoDto {
 
-    @NotNull
-    @DecimalMin(value = "0.0", inclusive = false)
+    @NotNull(message = "El monto es obligatorio")
+    @DecimalMin(value = "0.0", inclusive = false, message = "El monto debe ser mayor a cero")
     private BigDecimal monto;
 
-    @NotNull
+    @NotNull(message = "El metodo de pago es obligatorio")
     private MetodoPago metodoPago;
 
-    @NotNull
+    @NotNull(message = "La reserva es obligatoria")
     private Integer idReserva;
 
     private String titularTarjeta;

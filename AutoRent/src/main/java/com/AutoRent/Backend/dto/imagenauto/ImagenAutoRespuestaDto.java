@@ -13,6 +13,7 @@ public class ImagenAutoRespuestaDto {
     private Integer idImagen;
     private String nombreArchivo;
     private String urlImagen;
+    private String publicId;
     private Boolean principal;
     private LocalDateTime fechaCarga;
     private Integer idAuto;

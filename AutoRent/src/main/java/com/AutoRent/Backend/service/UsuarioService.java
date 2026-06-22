@@ -34,7 +34,6 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-
     @Transactional
     public UsuarioRespuestaDto registrarUsuario(RegistroUsuarioDto dto) {
         if (usuarioRepository.existsByEmailIgnoreCase(dto.getEmail())) {
@@ -56,14 +55,14 @@ public class UsuarioService {
 
     public AuthRespuestaDto iniciarSesion(LoginDto dto) {
         Usuario usuario = usuarioRepository.findByEmailIgnoreCaseConRoles(dto.getEmail())
-                .orElseThrow(() -> new LoginRequeridoException("Credenciales incorrectas"));
+                .orElseThrow(() -> new LoginRequeridoException("Mail incorrecto"));
 
         if (!Boolean.TRUE.equals(usuario.getActivo())) {
             throw new LoginRequeridoException("Usuario inactivo");
         }
 
         if (!passwordEncoder.matches(dto.getPassword(), usuario.getPassword())) {
-            throw new LoginRequeridoException("Credenciales incorrectas");
+            throw new LoginRequeridoException("Contrasenia incorrecta");
         }
 
         return new AuthRespuestaDto(
