@@ -215,7 +215,7 @@ FROM usuario u
 WHERE u.email = 'propietario@test.com';
 
 INSERT IGNORE INTO perfil_propietario (id_usuario, dni, cuit, direccion, ciudad, provincia, verificado)
-SELECT u.id_usuario, '32999888', '20329998887', 'Av. Santa Fe 2222', 'Buenos Aires', 'Buenos Aires', TRUE
+SELECT u.id_usuario, '32999888', '20329998887', 'Av. Colon 1450', 'Córdoba', 'Córdoba', TRUE
 FROM usuario u
 WHERE u.email = 'adminprop@test.com';
 
@@ -328,9 +328,9 @@ SELECT
     'NAFTA',
     12000.00,
     'Hatchback urbano con buen equipamiento y manejo sencillo.',
-    'Buenos Aires',
-    'Buenos Aires',
-    'Av. Santa Fe 2222',
+    'Córdoba',
+    'Córdoba',
+    'Av. Colon 1450',
     u.id_usuario,
     c.id_categoria
 FROM usuario u
@@ -367,9 +367,9 @@ SELECT
     'ELECTRICO',
     28000.00,
     'Sedan electrico premium con caja automatica y excelente autonomia.',
-    'Buenos Aires',
-    'Buenos Aires',
-    'Av. Santa Fe 2500',
+    'Córdoba',
+    'Córdoba',
+    'Av. Rafael Nunez 3800',
     u.id_usuario,
     c.id_categoria
 FROM usuario u
@@ -406,9 +406,9 @@ SELECT
     'NAFTA',
     95000.00,
     'Deportivo premium descapotable para alquileres especiales.',
-    'Buenos Aires',
-    'Buenos Aires',
-    'Av. Libertador 4100',
+    'Córdoba',
+    'Córdoba',
+    'Bv. San Juan 620',
     u.id_usuario,
     c.id_categoria
 FROM usuario u
