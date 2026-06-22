@@ -39,6 +39,10 @@ public class ImagenAuto {
     @Column(name = "url_imagen", nullable = false, length = 500)
     private String urlImagen;
 
+    @Size(max = 255)
+    @Column(name = "public_id", length = 255)
+    private String publicId;
+
     @Column(nullable = false)
     private Boolean principal;
 
