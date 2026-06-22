@@ -42,10 +42,7 @@ class UsuarioServiceTest {
 
     @Test
     void iniciarSesionConPasswordIncorrectaLanzaLoginRequerido() {
-        Usuario usuario = new Usuario();
-        usuario.setEmail("cliente@test.com");
-        usuario.setPassword("hash");
-        usuario.setActivo(true);
+        Usuario usuario = crearUsuarioCliente();
 
         when(usuarioRepository.findByEmailIgnoreCaseConRoles("cliente@test.com"))
                 .thenReturn(Optional.of(usuario));
@@ -59,13 +56,7 @@ class UsuarioServiceTest {
     @Test
     void iniciarSesionCorrectoDevuelveTokenYUsuario() {
         Rol rolCliente = new Rol(1, NombreRol.CLIENTE);
-
-        Usuario usuario = new Usuario();
-        usuario.setIdUsuario(1);
-        usuario.setNombre("Cliente Test");
-        usuario.setEmail("cliente@test.com");
-        usuario.setPassword("hash");
-        usuario.setActivo(true);
+        Usuario usuario = crearUsuarioCliente();
         usuario.getRoles().add(rolCliente);
 
         LoginDto dto = new LoginDto("cliente@test.com", "123456");
@@ -94,5 +85,15 @@ class UsuarioServiceTest {
         when(usuarioRepository.existsByEmailIgnoreCase("cliente@test.com")).thenReturn(true);
 
         assertThrows(DatoDuplicadoException.class, () -> usuarioService.registrarUsuario(dto));
+    }
+
+    private Usuario crearUsuarioCliente() {
+        Usuario usuario = new Usuario();
+        usuario.setIdUsuario(1);
+        usuario.setNombre("Cliente Test");
+        usuario.setEmail("cliente@test.com");
+        usuario.setPassword("hash");
+        usuario.setActivo(true);
+        return usuario;
     }
 }

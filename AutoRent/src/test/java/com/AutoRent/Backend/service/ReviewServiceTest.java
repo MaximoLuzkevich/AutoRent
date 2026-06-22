@@ -41,8 +41,7 @@ class ReviewServiceTest {
 
     @Test
     void crearReviewSinReservaFinalizadaLanzaParametroIncorrecto() {
-        Usuario cliente = new Usuario();
-        cliente.setIdUsuario(1);
+        Usuario cliente = crearUsuario(1);
 
         Auto auto = new Auto();
         auto.setIdAuto(10);
@@ -60,11 +59,8 @@ class ReviewServiceTest {
 
     @Test
     void eliminarReviewDeOtroUsuarioLanzaPermisoInsuficiente() {
-        Usuario autor = new Usuario();
-        autor.setIdUsuario(1);
-
-        Usuario otroUsuario = new Usuario();
-        otroUsuario.setIdUsuario(2);
+        Usuario autor = crearUsuario(1);
+        Usuario otroUsuario = crearUsuario(2);
 
         Review review = new Review();
         review.setIdReview(20);
@@ -75,5 +71,11 @@ class ReviewServiceTest {
         when(usuarioService.tieneRol(otroUsuario, NombreRol.ADMINISTRADOR)).thenReturn(false);
 
         assertThrows(PermisoInsuficienteException.class, () -> reviewService.eliminarReview(20));
+    }
+
+    private Usuario crearUsuario(Integer idUsuario) {
+        Usuario usuario = new Usuario();
+        usuario.setIdUsuario(idUsuario);
+        return usuario;
     }
 }

@@ -14,6 +14,7 @@ import com.AutoRent.Backend.repository.AutoRepository;
 import com.AutoRent.Backend.repository.ReservaRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,20 +39,9 @@ class ReservaServiceTest {
 
     @Test
     void crearReservaDeAutoPropioLanzaParametroIncorrecto() {
-        Usuario usuario = new Usuario();
-        usuario.setIdUsuario(1);
-
-        Auto auto = new Auto();
-        auto.setIdAuto(10);
-        auto.setActivo(true);
-        auto.setPrecioDia(BigDecimal.valueOf(10000));
-        auto.setPropietario(usuario);
-
-        ReservaDto dto = new ReservaDto(
-                LocalDate.now().plusDays(1),
-                LocalDate.now().plusDays(3),
-                10
-        );
+        Usuario usuario = crearUsuario(1);
+        Auto auto = crearAutoPublicado(usuario);
+        ReservaDto dto = crearReservaDto(1, 3);
 
         when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(usuario);
         when(autoRepository.findById(10)).thenReturn(Optional.of(auto));
@@ -61,24 +51,11 @@ class ReservaServiceTest {
 
     @Test
     void buscarReservaAjenaLanzaPermisoInsuficiente() {
-        Usuario cliente = new Usuario();
-        cliente.setIdUsuario(1);
-
-        Usuario propietario = new Usuario();
-        propietario.setIdUsuario(2);
-
-        Usuario otroUsuario = new Usuario();
-        otroUsuario.setIdUsuario(3);
-
-        Auto auto = new Auto();
-        auto.setIdAuto(10);
-        auto.setPropietario(propietario);
-
-        Reserva reserva = new Reserva();
-        reserva.setIdReserva(5);
-        reserva.setEstado(EstadoReserva.PENDIENTE);
-        reserva.setCliente(cliente);
-        reserva.setAuto(auto);
+        Usuario cliente = crearUsuario(1);
+        Usuario propietario = crearUsuario(2);
+        Usuario otroUsuario = crearUsuario(3);
+        Auto auto = crearAutoPublicado(propietario);
+        Reserva reserva = crearReservaPendiente(cliente, auto);
 
         when(reservaRepository.findById(5)).thenReturn(Optional.of(reserva));
         when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(otroUsuario);
@@ -88,33 +65,52 @@ class ReservaServiceTest {
 
     @Test
     void crearReservaSuperpuestaLanzaParametroIncorrecto() {
-        Usuario cliente = new Usuario();
-        cliente.setIdUsuario(1);
-
-        Usuario propietario = new Usuario();
-        propietario.setIdUsuario(2);
-
-        Auto auto = new Auto();
-        auto.setIdAuto(10);
-        auto.setActivo(true);
-        auto.setPrecioDia(BigDecimal.valueOf(10000));
-        auto.setPropietario(propietario);
-
-        ReservaDto dto = new ReservaDto(
-                LocalDate.now().plusDays(1),
-                LocalDate.now().plusDays(4),
-                10
-        );
+        Usuario cliente = crearUsuario(1);
+        Usuario propietario = crearUsuario(2);
+        Auto auto = crearAutoPublicado(propietario);
+        ReservaDto dto = crearReservaDto(1, 4);
 
         when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(cliente);
         when(autoRepository.findById(10)).thenReturn(Optional.of(auto));
         when(reservaRepository.existsByAutoIdAutoAndEstadoInAndFechaInicioBeforeAndFechaFinAfter(
                 10,
-                java.util.List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA),
+                List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA),
                 dto.getFechaFin(),
                 dto.getFechaInicio()
         )).thenReturn(true);
 
         assertThrows(ParametroIncorrectoException.class, () -> reservaService.crearReservaAutenticada(dto));
+    }
+
+    private Usuario crearUsuario(Integer idUsuario) {
+        Usuario usuario = new Usuario();
+        usuario.setIdUsuario(idUsuario);
+        return usuario;
+    }
+
+    private Auto crearAutoPublicado(Usuario propietario) {
+        Auto auto = new Auto();
+        auto.setIdAuto(10);
+        auto.setActivo(true);
+        auto.setPrecioDia(BigDecimal.valueOf(10000));
+        auto.setPropietario(propietario);
+        return auto;
+    }
+
+    private Reserva crearReservaPendiente(Usuario cliente, Auto auto) {
+        Reserva reserva = new Reserva();
+        reserva.setIdReserva(5);
+        reserva.setEstado(EstadoReserva.PENDIENTE);
+        reserva.setCliente(cliente);
+        reserva.setAuto(auto);
+        return reserva;
+    }
+
+    private ReservaDto crearReservaDto(int diasDesdeInicio, int diasHastaFin) {
+        return new ReservaDto(
+                LocalDate.now().plusDays(diasDesdeInicio),
+                LocalDate.now().plusDays(diasHastaFin),
+                10
+        );
     }
 }

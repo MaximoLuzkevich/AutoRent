@@ -8,6 +8,7 @@ import com.AutoRent.Backend.exception.DatoDuplicadoException;
 import com.AutoRent.Backend.exception.ParametroIncorrectoException;
 import com.AutoRent.Backend.exception.PermisoInsuficienteException;
 import com.AutoRent.Backend.model.Auto;
+import com.AutoRent.Backend.model.PerfilPropietario;
 import com.AutoRent.Backend.model.Usuario;
 import com.AutoRent.Backend.model.enums.NombreCategoriaAuto;
 import com.AutoRent.Backend.model.enums.NombreRol;
@@ -15,6 +16,7 @@ import com.AutoRent.Backend.model.enums.TipoCombustible;
 import com.AutoRent.Backend.model.enums.TipoTransmision;
 import com.AutoRent.Backend.repository.AutoRepository;
 import com.AutoRent.Backend.repository.CategoriaAutoRepository;
+import com.AutoRent.Backend.repository.PerfilPropietarioRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -34,6 +36,9 @@ class AutoServiceTest {
     private CategoriaAutoRepository categoriaAutoRepository;
 
     @Mock
+    private PerfilPropietarioRepository perfilPropietarioRepository;
+
+    @Mock
     private UsuarioService usuarioService;
 
     @InjectMocks
@@ -48,6 +53,7 @@ class AutoServiceTest {
 
         when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(propietario);
         when(usuarioService.tieneRol(propietario, NombreRol.PROPIETARIO)).thenReturn(true);
+        when(perfilPropietarioRepository.findById(1)).thenReturn(Optional.of(crearPerfilPropietario(propietario)));
         when(autoRepository.existsByPatenteIgnoreCase("ABC123")).thenReturn(true);
 
         assertThrows(DatoDuplicadoException.class, () -> autoService.crearAutoAutenticado(dto));
@@ -72,6 +78,22 @@ class AutoServiceTest {
                 PermisoInsuficienteException.class,
                 () -> autoService.modificarAutoAutenticado(10, crearAutoDto("ABC123"))
         );
+    }
+
+    @Test
+    void crearAutoFueraDeLaCiudadDelPropietarioLanzaParametroIncorrecto() {
+        Usuario propietario = new Usuario();
+        propietario.setIdUsuario(1);
+
+        AutoDto dto = crearAutoDto("ABC123");
+        dto.setCiudad("Rosario");
+        dto.setProvincia("Santa Fe");
+
+        when(usuarioService.obtenerUsuarioAutenticado()).thenReturn(propietario);
+        when(usuarioService.tieneRol(propietario, NombreRol.PROPIETARIO)).thenReturn(true);
+        when(perfilPropietarioRepository.findById(1)).thenReturn(Optional.of(crearPerfilPropietario(propietario)));
+
+        assertThrows(ParametroIncorrectoException.class, () -> autoService.crearAutoAutenticado(dto));
     }
 
     @Test
@@ -113,5 +135,15 @@ class AutoServiceTest {
                 "Av Siempre Viva 123",
                 NombreCategoriaAuto.ECONOMICO
         );
+    }
+
+    private PerfilPropietario crearPerfilPropietario(Usuario usuario) {
+        PerfilPropietario perfil = new PerfilPropietario();
+        perfil.setUsuario(usuario);
+        perfil.setIdUsuario(usuario.getIdUsuario());
+        perfil.setCiudad("Cordoba");
+        perfil.setProvincia("Cordoba");
+        perfil.setActivo(true);
+        return perfil;
     }
 }
