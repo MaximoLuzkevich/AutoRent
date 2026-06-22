@@ -24,6 +24,42 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private static final String[] RUTAS_PUBLICAS = {
+            "/",
+            "/index.html",
+            "/login",
+            "/login.html",
+            "/registro",
+            "/registro.html",
+            "/cliente",
+            "/cliente-inicio.html",
+            "/auto-detalle.html",
+            "/cliente-reservas.html",
+            "/cliente-pagos.html",
+            "/cliente-perfil.html",
+            "/propietario",
+            "/propietario-autos.html",
+            "/propietario-auto-detalle.html",
+            "/propietario-solicitudes.html",
+            "/propietario-pagos.html",
+            "/propietario-perfil.html",
+            "/propietario-panel",
+            "/admin",
+            "/admin-propietarios.html",
+            "/admin-propietario-detalle.html",
+            "/admin-pagos.html",
+            "/propietario.html",
+            "/auto-alta.html",
+            "/css/**",
+            "/img/**",
+            "/js/**",
+            "/api/usuarios/registro",
+            "/api/usuarios/login",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html"
+    };
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Value("${app.cors.allowed-origins}")
@@ -37,44 +73,14 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(
-                                "/",
-                                "/index.html",
-                                "/login",
-                                "/login.html",
-                                "/registro",
-                                "/registro.html",
-                                "/admin",
-                                "/cliente",
-                                "/propietario-panel",
-                                "/cliente-inicio.html",
-                                "/auto-detalle.html",
-                                "/cliente-reservas.html",
-                                "/cliente-pagos.html",
-                                "/cliente-perfil.html",
-                                "/propietario-autos.html",
-                                "/propietario-auto-detalle.html",
-                                "/propietario-solicitudes.html",
-                                "/propietario-pagos.html",
-                                "/propietario-perfil.html",
-                                "/admin-propietarios.html",
-                                "/admin-propietario-detalle.html",
-                                "/admin-pagos.html",
-                                "/propietario.html",
-                                "/auto-alta.html",
-                                "/css/**",
-                                "/js/**",
-                                "/api/usuarios/registro",
-                                "/api/usuarios/login",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
+                        .requestMatchers(RUTAS_PUBLICAS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/autos/me/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/autos/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/autos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/lugares/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/pagos/mercadopago/webhook").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/logout").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/me").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/usuarios/me").authenticated()

@@ -31,8 +31,8 @@ public class FrontendController {
         return "forward:/admin-propietarios.html";
     }
 
-    @GetMapping("/propietario-panel")
-    public String propietarioPanel() {
+    @GetMapping({"/propietario", "/propietario-panel"})
+    public String propietario() {
         return "forward:/propietario-autos.html";
     }
 }
