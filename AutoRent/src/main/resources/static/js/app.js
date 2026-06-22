@@ -672,13 +672,14 @@
 
     function renderStars(puntuacion) {
         const valor = Math.max(0, Math.min(5, Number(puntuacion || 0)));
-        return `${"★".repeat(valor)}${"☆".repeat(5 - valor)}`;
+        return `${"&#9733;".repeat(valor)}${"&#9734;".repeat(5 - valor)}`;
     }
 
-    function reservaCard(reserva, modo = "cliente", autosConReview = new Set()) {
+    function reservaCard(reserva, modo = "cliente", autosConReview = new Set(), reservasConPago = new Set()) {
         const puedeAprobar = modo === "propietario" && reserva.estado === "PENDIENTE";
         const puedeCancelar = modo === "cliente" && ["PENDIENTE", "CONFIRMADA"].includes(reserva.estado);
-        const puedePagar = modo === "cliente" && reserva.estado === "CONFIRMADA";
+        const pagoRegistrado = reservasConPago.has(Number(reserva.idReserva));
+        const puedePagar = modo === "cliente" && reserva.estado === "CONFIRMADA" && !pagoRegistrado;
         const reviewPublicada = modo === "cliente" && autosConReview.has(Number(reserva.idAuto));
         const puedeReview = modo === "cliente" && reserva.estado === "FINALIZADA" && !reviewPublicada;
         return `
@@ -692,6 +693,7 @@
                 <div class="list-actions">
                     <a class="btn btn-outline-primary btn-sm" href="${modo === "propietario" ? "propietario-auto-detalle.html" : "auto-detalle.html"}?id=${reserva.idAuto}">Ver auto</a>
                     ${puedePagar ? `<a class="btn btn-primary btn-sm" href="cliente-pagos.html?idReserva=${reserva.idReserva}&monto=${reserva.precioTotal}">Pagar</a>` : ""}
+                    ${pagoRegistrado && reserva.estado === "CONFIRMADA" ? `<span class="badge-soft">Pago registrado</span>` : ""}
                     ${modo === "cliente" && reserva.estado === "PENDIENTE" ? `<span class="badge-soft">Esperando aprobacion</span>` : ""}
                     ${puedeReview ? `<button class="btn btn-outline-success btn-sm" data-review-auto="${reserva.idAuto}" type="button">Agregar review</button>` : ""}
                     ${reviewPublicada ? `<span class="badge-soft">Review publicada</span>` : ""}
@@ -710,10 +712,18 @@
         const reviewAutoLabel = $("#reviewAutoLabel");
 
         async function cargar(path = "/reservas/me") {
-            const reservas = await api(path);
+            const [reservas, pagos] = await Promise.all([
+                api(path),
+                api("/pagos/me").catch(() => [])
+            ]);
             const autosConReview = await obtenerAutosConReviewPropia(reservas);
+            const reservasConPago = new Set(
+                pagos
+                        .filter((pago) => pago.estado !== "RECHAZADO")
+                        .map((pago) => Number(pago.idReserva))
+            );
             contenedor.innerHTML = reservas.length
-                ? reservas.map((reserva) => reservaCard(reserva, "cliente", autosConReview)).join("")
+                ? reservas.map((reserva) => reservaCard(reserva, "cliente", autosConReview, reservasConPago)).join("")
                 : `<p class="empty-line">Todavia no tenes reservas cargadas.</p>`;
         }
 
@@ -780,6 +790,7 @@
                 mensaje("Review cargada correctamente.", "success");
                 reviewForm.reset();
                 reviewSection?.classList.add("d-none");
+                await cargar();
             } catch (error) {
                 mensaje(error.message, "danger");
             }

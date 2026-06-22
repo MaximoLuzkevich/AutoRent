@@ -486,6 +486,64 @@ WHERE cliente.email = 'cliente@test.com'
         AND r.fecha_fin = '2026-08-03'
   );
 
+-- Reservas confirmadas sin pago para mostrar los tres medios de pago.
+INSERT INTO reserva (fecha_inicio, fecha_fin, precio_total, estado, id_cliente, id_auto)
+SELECT '2026-09-01', '2026-09-03', 20000.00, 'CONFIRMADA', cliente.id_usuario, auto_publicado.id_auto
+FROM usuario cliente
+JOIN auto auto_publicado ON auto_publicado.patente = 'AB123CD'
+WHERE cliente.email = 'cliente@test.com'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM reserva r
+      WHERE r.id_cliente = cliente.id_usuario
+        AND r.id_auto = auto_publicado.id_auto
+        AND r.fecha_inicio = '2026-09-01'
+        AND r.fecha_fin = '2026-09-03'
+  );
+
+INSERT INTO reserva (fecha_inicio, fecha_fin, precio_total, estado, id_cliente, id_auto)
+SELECT '2026-09-05', '2026-09-07', 24000.00, 'CONFIRMADA', cliente.id_usuario, auto_publicado.id_auto
+FROM usuario cliente
+JOIN auto auto_publicado ON auto_publicado.patente = 'AD321ON'
+WHERE cliente.email = 'cliente@test.com'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM reserva r
+      WHERE r.id_cliente = cliente.id_usuario
+        AND r.id_auto = auto_publicado.id_auto
+        AND r.fecha_inicio = '2026-09-05'
+        AND r.fecha_fin = '2026-09-07'
+  );
+
+INSERT INTO reserva (fecha_inicio, fecha_fin, precio_total, estado, id_cliente, id_auto)
+SELECT '2026-09-10', '2026-09-12', 27000.00, 'CONFIRMADA', cliente.id_usuario, auto_publicado.id_auto
+FROM usuario cliente
+JOIN auto auto_publicado ON auto_publicado.patente = 'AC624TL'
+WHERE cliente.email = 'cliente@test.com'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM reserva r
+      WHERE r.id_cliente = cliente.id_usuario
+        AND r.id_auto = auto_publicado.id_auto
+        AND r.fecha_inicio = '2026-09-10'
+        AND r.fecha_fin = '2026-09-12'
+  );
+
+-- Reserva finalizada sin review para mostrar la carga de una opinion.
+INSERT INTO reserva (fecha_inicio, fecha_fin, precio_total, estado, id_cliente, id_auto)
+SELECT '2026-04-10', '2026-04-12', 190000.00, 'FINALIZADA', cliente.id_usuario, auto_publicado.id_auto
+FROM usuario cliente
+JOIN auto auto_publicado ON auto_publicado.patente = 'AG900SF'
+WHERE cliente.email = 'cliente@test.com'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM reserva r
+      WHERE r.id_cliente = cliente.id_usuario
+        AND r.id_auto = auto_publicado.id_auto
+        AND r.fecha_inicio = '2026-04-10'
+        AND r.fecha_fin = '2026-04-12'
+  );
+
 -- Pagos de ejemplo. Solo hay pagos para reservas confirmadas o finalizadas.
 INSERT INTO pago (monto, metodo_pago, estado, id_reserva)
 SELECT r.precio_total, 'MERCADO_PAGO', 'APROBADO', r.id_reserva
