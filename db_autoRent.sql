@@ -210,12 +210,12 @@ WHERE u.email IN ('admin@test.com', 'adminprop@test.com');
 
 -- Datos de propietario para los usuarios que pueden publicar autos.
 INSERT IGNORE INTO perfil_propietario (id_usuario, dni, cuit, direccion, ciudad, provincia, verificado)
-SELECT u.id_usuario, '30111222', '20-30111222-3', 'Av. Corrientes 1234', 'Buenos Aires', 'Buenos Aires', TRUE
+SELECT u.id_usuario, '30111222', '20301112223', 'Av. Corrientes 1234', 'Buenos Aires', 'Buenos Aires', TRUE
 FROM usuario u
 WHERE u.email = 'propietario@test.com';
 
 INSERT IGNORE INTO perfil_propietario (id_usuario, dni, cuit, direccion, ciudad, provincia, verificado)
-SELECT u.id_usuario, '32999888', '20-32999888-7', 'Av. Santa Fe 2222', 'Buenos Aires', 'Buenos Aires', TRUE
+SELECT u.id_usuario, '32999888', '20329998887', 'Av. Santa Fe 2222', 'Buenos Aires', 'Buenos Aires', TRUE
 FROM usuario u
 WHERE u.email = 'adminprop@test.com';
 

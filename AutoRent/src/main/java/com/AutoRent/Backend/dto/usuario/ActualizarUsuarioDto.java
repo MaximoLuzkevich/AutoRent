@@ -2,6 +2,7 @@ package com.AutoRent.Backend.dto.usuario;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,6 +15,10 @@ public class ActualizarUsuarioDto {
 
     @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
+    @Pattern(
+            regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?: [A-Za-zÁÉÍÓÚáéíóúÑñ]+)*$",
+            message = "El nombre solo puede contener letras y espacios"
+    )
     private String nombre;
 
     @NotBlank(message = "El email es obligatorio")
@@ -21,6 +26,6 @@ public class ActualizarUsuarioDto {
     @Size(max = 150, message = "El email no puede superar los 150 caracteres")
     private String email;
 
-    @Size(max = 30, message = "El telefono no puede superar los 30 caracteres")
+    @Pattern(regexp = "^$|\\d{6,15}", message = "El telefono debe tener entre 6 y 15 numeros")
     private String telefono;
 }
