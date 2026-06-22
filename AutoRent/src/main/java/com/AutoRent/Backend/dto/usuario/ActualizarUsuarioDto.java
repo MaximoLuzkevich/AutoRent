@@ -12,15 +12,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ActualizarUsuarioDto {
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
     private String nombre;
 
-    @NotBlank
-    @Email
-    @Size(max = 150)
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El email no tiene un formato valido")
+    @Size(max = 150, message = "El email no puede superar los 150 caracteres")
     private String email;
 
-    @Size(max = 30)
+    @Size(max = 30, message = "El telefono no puede superar los 30 caracteres")
     private String telefono;
 }

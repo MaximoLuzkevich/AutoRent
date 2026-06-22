@@ -11,12 +11,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ImagenAutoDto {
 
-    @NotBlank
-    @Size(max = 255)
+    @NotBlank(message = "El nombre del archivo es obligatorio")
+    @Size(max = 255, message = "El nombre del archivo no puede superar los 255 caracteres")
     private String nombreArchivo;
 
-    @NotBlank
-    @Size(max = 500)
+    @NotBlank(message = "La URL de la imagen es obligatoria")
+    @Size(max = 500, message = "La URL de la imagen no puede superar los 500 caracteres")
     private String urlImagen;
 
     private Boolean principal;
