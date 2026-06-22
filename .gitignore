@@ -1,2 +1,16 @@
+# Compilados
+target/
+AutoRent/target/
+
+# Logs locales
 spring-boot-run*.log
-.tmp_friend_cloudinary/
+*.log
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Configuracion local
+.env
+*.env
