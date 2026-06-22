@@ -94,7 +94,7 @@
             </div>
             <div>
                 <label class="form-label">Provincia</label>
-                <input class="form-control" name="provincia" type="text">
+                <input class="form-control" name="provincia" type="text" required>
             </div>
             <div>
                 <label class="form-label">Direccion de retiro</label>
@@ -109,6 +109,27 @@
                 <button class="btn btn-primary" type="submit">Guardar cambios</button>
             </div>
         </form>
+    </section>
+
+    <section class="form-surface mt-4">
+        <div class="section-heading">
+            <div>
+                <span>Imagenes</span>
+                <h2>Fotos del auto</h2>
+            </div>
+        </div>
+        <form id="ownerImageForm" class="form-grid">
+            <div>
+                <label class="form-label" for="ownerImageFile">Imagen</label>
+                <input id="ownerImageFile" class="form-control" name="file" type="file" accept="image/*" multiple required>
+            </div>
+            <div class="form-check align-self-end">
+                <input id="ownerImagePrincipal" class="form-check-input" name="principal" type="checkbox">
+                <label class="form-check-label fw-semibold" for="ownerImagePrincipal">Marcar como principal</label>
+            </div>
+            <button class="btn btn-outline-primary" type="submit">Subir imagen</button>
+        </form>
+        <div id="ownerImagesList" class="image-preview-grid mt-3"></div>
     </section>
 
     <section id="ownerAutoReviews" class="fleet-section"></section>

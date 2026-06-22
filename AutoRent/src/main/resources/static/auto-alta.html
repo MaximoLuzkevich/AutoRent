@@ -31,11 +31,6 @@
 
             <form id="autoForm">
                 <div class="row g-3">
-                    <div class="col-12">
-                        <label for="idAuto" class="form-label">ID auto para modificar</label>
-                        <input id="idAuto" name="idAuto" type="number" class="form-control" min="1">
-                    </div>
-
                     <div class="col-md-3">
                         <label for="marca" class="form-label">Marca <span class="required-star">*</span></label>
                         <input id="marca" name="marca" type="text" class="form-control" maxlength="100" required>
@@ -102,8 +97,8 @@
                         <input id="ciudad" name="ciudad" type="text" class="form-control" maxlength="100" required>
                     </div>
                     <div class="col-md-4">
-                        <label for="provincia" class="form-label">Provincia</label>
-                        <input id="provincia" name="provincia" type="text" class="form-control" maxlength="100">
+                        <label for="provincia" class="form-label">Provincia <span class="required-star">*</span></label>
+                        <input id="provincia" name="provincia" type="text" class="form-control" maxlength="100" required>
                     </div>
                     <div class="col-md-4">
                         <label for="direccionRetiro" class="form-label">Direccion de retiro <span class="required-star">*</span></label>
@@ -128,30 +123,33 @@
                 <span>IMG</span>
                 <span>Imagenes del auto</span>
             </div>
-            <p class="text-muted">Carga una URL por imagen. Mas adelante esto puede conectarse con Cloudinary para subir archivos desde la computadora.</p>
+            <p class="text-muted">Selecciona una o mas imagenes desde tu computadora. La primera se guarda como principal.</p>
 
             <form id="imagenForm" class="form-grid one-col">
                 <div class="upload-zone mb-2">
-                    <span class="upload-icon">IMG</span>
-                    <strong>Imagen principal o secundaria</strong>
+                    <div id="imageUploadEmpty">
+                        <span class="upload-icon">IMG</span>
+                        <strong>Imagenes del vehiculo</strong>
+                    </div>
+                    <div id="imageUploadPreview" class="upload-preview d-none">
+                        <img id="mainImagePreview" src="" alt="Imagen principal">
+                        <div>
+                            <span>Imagen principal</span>
+                            <strong id="mainImageName"></strong>
+                        </div>
+                        <ul id="otherImagesList" class="upload-file-list"></ul>
+                    </div>
                 </div>
+                <input id="idAutoImagen" name="idAuto" type="hidden" required>
                 <div>
-                    <label for="idAutoImagen" class="form-label">ID auto</label>
-                    <input id="idAutoImagen" name="idAuto" type="number" class="form-control" min="1" required>
-                </div>
-                <div>
-                    <label for="nombreArchivo" class="form-label">Nombre de la imagen</label>
-                    <input id="nombreArchivo" name="nombreArchivo" type="text" class="form-control" maxlength="255" required>
-                </div>
-                <div>
-                    <label for="urlImagen" class="form-label">URL de imagen</label>
-                    <input id="urlImagen" name="urlImagen" type="url" class="form-control" maxlength="500" required>
+                    <label for="fileImagen" class="form-label">Imagenes</label>
+                    <input id="fileImagen" name="file" type="file" class="form-control" accept="image/*" multiple required>
                 </div>
                 <div class="form-check">
-                    <input id="principal" name="principal" class="form-check-input" type="checkbox">
-                    <label for="principal" class="form-check-label fw-semibold">Marcar como imagen principal</label>
+                    <input id="principal" name="principal" class="form-check-input" type="checkbox" checked>
+                    <label for="principal" class="form-check-label fw-semibold">Usar la primera imagen como principal</label>
                 </div>
-                <button class="btn btn-outline-primary w-100" type="submit">Agregar imagen</button>
+                <button class="btn btn-outline-primary w-100" type="submit">Subir mas imagenes</button>
             </form>
         </aside>
     </section>

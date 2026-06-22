@@ -34,7 +34,10 @@
                 <div class="home-search-grid">
                     <div>
                         <label class="form-label" for="ciudad">Ciudad de retiro</label>
-                        <input class="form-control" id="ciudad" name="ciudad" type="text" required>
+                        <div class="autocomplete-wrap">
+                            <input class="form-control" id="ciudad" name="ciudad" type="text" autocomplete="off" required>
+                            <div id="citySuggestions" class="autocomplete-list d-none"></div>
+                        </div>
                     </div>
                     <div>
                         <label class="form-label" for="fechaInicio">Fecha de retiro</label>

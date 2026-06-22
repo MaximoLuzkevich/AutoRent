@@ -84,6 +84,34 @@
         return data;
     }
 
+    async function apiMultipart(path, formData, method = "POST") {
+        const response = await fetch(`${API_BASE}${path}`, {
+            method,
+            headers: {
+                Accept: "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: formData
+        });
+
+        const text = await response.text();
+        let data = null;
+
+        if (text) {
+            try {
+                data = JSON.parse(text);
+            } catch (error) {
+                throw new Error("La respuesta del servidor no fue JSON.");
+            }
+        }
+
+        if (!response.ok) {
+            throw new Error(data?.mensaje || data?.error || data?.message || "No se pudo completar la operacion");
+        }
+
+        return data;
+    }
+
     function cerrarSesion() {
         localStorage.removeItem("autorent_token");
         localStorage.removeItem("autorent_usuario");
@@ -142,13 +170,26 @@
         return fallbackImages[auto.categoria] || fallbackImages.ECONOMICO;
     }
 
+    function debounce(fn, delay = 350) {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => fn(...args), delay);
+        };
+    }
+
     async function cargarImagenPrincipal(auto) {
         const img = document.querySelector(`[data-car-image="${auto.idAuto}"]`);
         if (!img) {
             return;
         }
         try {
-            const imagen = await api(`/autos/${auto.idAuto}/imagenes/principal`);
+            const imagenes = await api(`/autos/${auto.idAuto}/imagenes`);
+            const imagen = imagenes.find((item) => item.principal) || imagenes[0];
+            if (!imagen) {
+                img.src = carImage(auto);
+                return;
+            }
             img.src = imagen.urlImagen;
             img.alt = imagen.nombreArchivo || `${auto.marca} ${auto.modelo}`;
         } catch (error) {
@@ -208,6 +249,7 @@
         const contenedor = $("#homeCars");
         const resultados = $("#searchResults");
         const form = $("#searchForm");
+        configurarAutocompleteCiudad();
 
         try {
             const autos = await api("/autos");
@@ -251,6 +293,95 @@
         });
     }
 
+    function configurarAutocompletesLugares(root = document) {
+        root.querySelectorAll("input[name='ciudad'], input[name='provincia']").forEach((input) => {
+            const form = input.closest("form");
+            const ciudadInput = form?.querySelector("input[name='ciudad']");
+            const provinciaInput = form?.querySelector("input[name='provincia']");
+            configurarAutocompleteLugar(input, ciudadInput, provinciaInput);
+        });
+    }
+
+    function configurarAutocompleteCiudad() {
+        configurarAutocompletesLugares(document);
+    }
+
+    function configurarAutocompleteLugar(input, ciudadInput = null, provinciaInput = null) {
+        if (!input || input.dataset.geoapifyReady === "true") {
+            return;
+        }
+
+        input.dataset.geoapifyReady = "true";
+        const wrapper = input.parentElement;
+        wrapper?.classList.add("autocomplete-wrap");
+
+        let lista = wrapper?.querySelector(".autocomplete-list");
+        if (!lista) {
+            lista = document.createElement("div");
+            lista.className = "autocomplete-list d-none";
+            wrapper?.appendChild(lista);
+        }
+
+        const buscar = debounce(async () => {
+            const texto = input.value.trim();
+            if (texto.length < 2) {
+                ocultarSugerencias(lista);
+                return;
+            }
+
+            try {
+                const lugares = await api(`/lugares/autocomplete?texto=${encodeURIComponent(texto)}`);
+                renderSugerenciasLugar(lista, input, ciudadInput, provinciaInput, lugares);
+            } catch (error) {
+                ocultarSugerencias(lista);
+            }
+        });
+
+        input.addEventListener("input", buscar);
+        input.addEventListener("blur", () => {
+            setTimeout(() => ocultarSugerencias(lista), 160);
+        });
+    }
+
+    function renderSugerenciasLugar(lista, input, ciudadInput, provinciaInput, lugares) {
+        if (!lugares.length) {
+            ocultarSugerencias(lista);
+            return;
+        }
+
+        const esProvincia = input.name === "provincia";
+        lista.innerHTML = lugares.map((lugar) => `
+            <button type="button">
+                <strong>${escapeHtml(esProvincia ? (lugar.provincia || lugar.ciudad) : lugar.ciudad)}</strong>
+                <span>${escapeHtml(lugar.textoCompleto || lugar.pais || lugar.provincia || "")}</span>
+            </button>
+        `).join("");
+        lista.classList.remove("d-none");
+
+        lista.querySelectorAll("button").forEach((button, index) => {
+            button.addEventListener("click", () => {
+                const lugar = lugares[index];
+                if (esProvincia) {
+                    input.value = lugar.provincia || lugar.ciudad || "";
+                    if (ciudadInput && ciudadInput !== input && !ciudadInput.value && lugar.ciudad) {
+                        ciudadInput.value = lugar.ciudad;
+                    }
+                } else {
+                    input.value = lugar.ciudad || "";
+                }
+                if (provinciaInput && provinciaInput !== input) {
+                    provinciaInput.value = lugar.provincia || "";
+                }
+                ocultarSugerencias(lista);
+            });
+        });
+    }
+
+    function ocultarSugerencias(lista) {
+        lista.classList.add("d-none");
+        lista.innerHTML = "";
+    }
+
     async function initAutoDetalle() {
         const id = getParam("id");
         const detalle = $("#autoDetail");
@@ -277,7 +408,7 @@
                     <div>
                         <img class="detail-main-image" src="${principal?.urlImagen || carImage(auto)}" alt="${escapeHtml(auto.marca)} ${escapeHtml(auto.modelo)}">
                         <div class="detail-thumbs">
-                            ${imagenes.map((imagen) => `<img src="${escapeHtml(imagen.urlImagen)}" alt="${escapeHtml(imagen.nombreArchivo)}">`).join("")}
+                            ${imagenes.map((imagen) => `<img data-detail-thumb src="${escapeHtml(imagen.urlImagen)}" alt="${escapeHtml(imagen.nombreArchivo)}">`).join("")}
                         </div>
                     </div>
                     <div class="detail-info">
@@ -297,6 +428,7 @@
             `;
 
             renderReviews(reviewsBox, reviews);
+            configurarGaleriaDetalle(detalle);
         } catch (error) {
             mensaje(error.message, "danger");
         }
@@ -326,6 +458,7 @@
         const id = getParam("id");
         const detalle = $("#ownerAutoDetail");
         const form = $("#ownerAutoForm");
+        const imageForm = $("#ownerImageForm");
 
         if (!id) {
             detalle.innerHTML = `<p class="empty-line">No se indico el auto.</p>`;
@@ -344,7 +477,7 @@
                     <div>
                         <img class="detail-main-image" src="${principal?.urlImagen || carImage(auto)}" alt="${escapeHtml(auto.marca)} ${escapeHtml(auto.modelo)}">
                         <div class="detail-thumbs">
-                            ${imagenes.map((imagen) => `<img src="${escapeHtml(imagen.urlImagen)}" alt="${escapeHtml(imagen.nombreArchivo)}">`).join("")}
+                            ${imagenes.map((imagen) => `<img data-detail-thumb src="${escapeHtml(imagen.urlImagen)}" alt="${escapeHtml(imagen.nombreArchivo)}">`).join("")}
                         </div>
                     </div>
                     <div class="detail-info">
@@ -362,7 +495,9 @@
             `;
 
             llenarAutoForm(form, auto);
+            renderOwnerImages(id, imagenes);
             renderReviews($("#ownerAutoReviews"), reviews);
+            configurarGaleriaDetalle(detalle);
         } catch (error) {
             mensaje(error.message, "danger");
         }
@@ -389,6 +524,63 @@
                 mensaje(error.message, "danger");
             }
         });
+
+        imageForm?.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const archivos = [...imageForm.elements.file.files];
+            if (!archivos.length) {
+                mensaje("Selecciona al menos una imagen.", "warning");
+                return;
+            }
+
+            try {
+                for (const [index, file] of archivos.entries()) {
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    formData.append("principal", imageForm.elements.principal.checked && index === 0);
+                    await apiMultipart(`/autos/${id}/imagenes/upload`, formData);
+                }
+                mensaje("Imagenes subidas correctamente.", "success");
+                imageForm.reset();
+                const imagenes = await api(`/autos/${id}/imagenes`).catch(() => []);
+                renderOwnerImages(id, imagenes);
+            } catch (error) {
+                mensaje(error.message, "danger");
+            }
+        });
+
+        document.addEventListener("click", async (event) => {
+            const boton = event.target.closest("[data-delete-owner-image]");
+            if (!boton) return;
+
+            try {
+                await api(`/autos/${id}/imagenes/${boton.dataset.deleteOwnerImage}`, { method: "DELETE" });
+                mensaje("Imagen eliminada correctamente.", "success");
+                const imagenes = await api(`/autos/${id}/imagenes`).catch(() => []);
+                renderOwnerImages(id, imagenes);
+            } catch (error) {
+                mensaje(error.message, "danger");
+            }
+        });
+    }
+
+    function renderOwnerImages(idAuto, imagenes) {
+        const contenedor = $("#ownerImagesList");
+        if (!contenedor) {
+            return;
+        }
+
+        contenedor.innerHTML = imagenes.length
+            ? imagenes.map((imagen) => `
+                <div class="image-preview-card">
+                    <img src="${escapeHtml(imagen.urlImagen)}" alt="${escapeHtml(imagen.nombreArchivo)}">
+                    ${imagen.principal ? `<span class="image-preview-badge"></span>` : ""}
+                    <button class="btn btn-light btn-sm image-delete-button" type="button" data-delete-owner-image="${imagen.idImagen}">
+                        Eliminar
+                    </button>
+                </div>
+            `).join("")
+            : `<p class="empty-line">Este auto todavia no tiene imagenes.</p>`;
     }
 
     function llenarAutoForm(form, auto) {
@@ -401,6 +593,20 @@
             if (form.elements[campo]) {
                 form.elements[campo].value = auto[campo] ?? "";
             }
+        });
+    }
+
+    function configurarGaleriaDetalle(root) {
+        const main = root?.querySelector(".detail-main-image");
+        if (!main) {
+            return;
+        }
+
+        root.querySelectorAll("[data-detail-thumb]").forEach((thumb) => {
+            thumb.addEventListener("click", () => {
+                main.src = thumb.src;
+                main.alt = thumb.alt;
+            });
         });
     }
 
@@ -428,6 +634,10 @@
         if (!contenedor) {
             return;
         }
+        if (!reviews.length) {
+            contenedor.innerHTML = "";
+            return;
+        }
         const visibles = reviews.slice(0, 2);
         const ocultas = reviews.slice(2);
         contenedor.innerHTML = `
@@ -438,7 +648,7 @@
                 </div>
             </div>
             <div class="review-list">
-                ${(visibles.length ? visibles : [{ nombreCliente: "AutoRent", puntuacion: 5, comentario: "Este auto todavia no tiene reviews cargadas." }]).map(reviewCard).join("")}
+                ${visibles.map(reviewCard).join("")}
                 <div id="moreReviews" class="review-list d-none">${ocultas.map(reviewCard).join("")}</div>
             </div>
             ${ocultas.length ? `<button class="btn btn-outline-primary mt-3" id="showMoreReviews" type="button">Mostrar mas reviews</button>` : ""}
@@ -454,15 +664,21 @@
         return `
             <article class="review-card">
                 <strong>${escapeHtml(review.nombreCliente || "Cliente")}</strong>
-                <span>${"*".repeat(Number(review.puntuacion || 0))}</span>
+                <span class="review-stars">${renderStars(review.puntuacion)}</span>
                 <p>${escapeHtml(review.comentario || "Sin comentario.")}</p>
             </article>
         `;
     }
 
+    function renderStars(puntuacion) {
+        const valor = Math.max(0, Math.min(5, Number(puntuacion || 0)));
+        return `${"★".repeat(valor)}${"☆".repeat(5 - valor)}`;
+    }
+
     function reservaCard(reserva, modo = "cliente", autosConReview = new Set()) {
         const puedeAprobar = modo === "propietario" && reserva.estado === "PENDIENTE";
         const puedeCancelar = modo === "cliente" && ["PENDIENTE", "CONFIRMADA"].includes(reserva.estado);
+        const puedePagar = modo === "cliente" && reserva.estado === "CONFIRMADA";
         const reviewPublicada = modo === "cliente" && autosConReview.has(Number(reserva.idAuto));
         const puedeReview = modo === "cliente" && reserva.estado === "FINALIZADA" && !reviewPublicada;
         return `
@@ -475,7 +691,8 @@
                 </div>
                 <div class="list-actions">
                     <a class="btn btn-outline-primary btn-sm" href="${modo === "propietario" ? "propietario-auto-detalle.html" : "auto-detalle.html"}?id=${reserva.idAuto}">Ver auto</a>
-                    ${modo === "cliente" ? `<a class="btn btn-primary btn-sm" href="cliente-pagos.html?idReserva=${reserva.idReserva}&monto=${reserva.precioTotal}">Pagar</a>` : ""}
+                    ${puedePagar ? `<a class="btn btn-primary btn-sm" href="cliente-pagos.html?idReserva=${reserva.idReserva}&monto=${reserva.precioTotal}">Pagar</a>` : ""}
+                    ${modo === "cliente" && reserva.estado === "PENDIENTE" ? `<span class="badge-soft">Esperando aprobacion</span>` : ""}
                     ${puedeReview ? `<button class="btn btn-outline-success btn-sm" data-review-auto="${reserva.idAuto}" type="button">Agregar review</button>` : ""}
                     ${reviewPublicada ? `<span class="badge-soft">Review publicada</span>` : ""}
                     ${puedeCancelar ? `<button class="btn btn-outline-danger btn-sm" data-cancelar-reserva="${reserva.idReserva}" type="button">Cancelar</button>` : ""}
@@ -636,7 +853,9 @@
             try {
                 const pago = await api("/pagos", { method: "POST", body: JSON.stringify(body) });
                 if (pago.linkPago) {
-                    window.location.href = pago.linkPago;
+                    window.open(pago.linkPago, "_blank", "noopener,noreferrer");
+                    mensaje("Se abrio Mercado Pago en una nueva pestaña.", "success");
+                    await cargar();
                     return;
                 }
                 mensaje("Pago registrado correctamente.", "success");
@@ -931,6 +1150,7 @@
     }
 
     renderNavbar();
+    configurarAutocompletesLugares();
 
     const initByView = {
         home: initHome,
