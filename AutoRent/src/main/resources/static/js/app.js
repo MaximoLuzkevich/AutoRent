@@ -1089,16 +1089,9 @@
                         provincia: data.get("provincia")
                     })
                 });
-                mensaje("Propietario actualizado correctamente.", "success");
-            } catch (error) {
-                mensaje(error.message, "danger");
-            }
-        });
-
-        $("#verifyOwner")?.addEventListener("click", async () => {
-            try {
-                await api(`/propietarios/${id}/verificar`, { method: "PUT" });
-                mensaje("Propietario verificado correctamente.", "success");
+                const propietario = await api(`/propietarios/${id}/verificar`, { method: "PUT" });
+                $("#ownerMeta").textContent = `${propietario.emailUsuario} - ${propietario.activo ? "Activo" : "Inactivo"} - ${propietario.verificado ? "Verificado" : "Sin verificar"}`;
+                mensaje("Propietario actualizado y verificado correctamente.", "success");
             } catch (error) {
                 mensaje(error.message, "danger");
             }
