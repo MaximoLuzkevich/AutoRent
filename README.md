@@ -3,7 +3,17 @@
 AutoRent es un sistema de alquiler de autos desarrollado con Java y Spring Boot.
 Permite registrar usuarios, publicar autos, buscar disponibilidad por ciudad y fechas, crear reservas, aprobar solicitudes, registrar pagos, cargar imagenes y dejar reviews.
 
-El proyecto incluye un backend API REST y un frontend simple en HTML, CSS, Bootstrap y JavaScript para probar los flujos principales desde el navegador.
+El proyecto incluye un backend API REST y un frontend en HTML, CSS, Bootstrap y JavaScript para probar los flujos principales desde el navegador.
+
+## Aplicacion desplegada
+
+La aplicacion esta desplegada en Railway:
+
+```text
+https://autorent-production-d72a.up.railway.app/login.html
+```
+
+El backend y el frontend se sirven desde el mismo proyecto Spring Boot. La base de datos MySQL tambien esta configurada en Railway.
 
 ## Tecnologias
 
@@ -19,6 +29,7 @@ El proyecto incluye un backend API REST y un frontend simple en HTML, CSS, Boots
 - Geoapify
 - Cloudinary
 - HTML, CSS, Bootstrap y JavaScript
+- Railway
 
 ## Estructura
 
@@ -42,7 +53,9 @@ AutoRent/src/main/resources/static
 
 ## Base de datos
 
-La base usa MySQL. El script principal esta en:
+La base usa MySQL. En produccion se utiliza MySQL en Railway.
+
+El script principal esta en:
 
 ```text
 db_autoRent.sql
@@ -63,6 +76,7 @@ DB_PASSWORD
 JWT_SECRET
 JWT_EXPIRATION_MILLIS
 APP_BASE_URL
+CORS_ALLOWED_ORIGINS
 MERCADOPAGO_ACCESS_TOKEN
 GEOAPIFY_API_KEY
 CLOUDINARY_CLOUD_NAME
@@ -70,10 +84,18 @@ CLOUDINARY_API_KEY
 CLOUDINARY_API_SECRET
 ```
 
+En Railway estas variables se cargan desde la seccion `Variables` del servicio AutoRent.
+
 Para correr localmente, si no se cargan variables, se usan los valores por defecto definidos en:
 
 ```text
 AutoRent/src/main/resources/application.properties
+```
+
+En produccion se usa el perfil:
+
+```text
+SPRING_PROFILES_ACTIVE=prod
 ```
 
 ## Como ejecutar
@@ -96,6 +118,12 @@ mvn spring-boot:run
 
 ```text
 http://localhost:8080/login.html
+```
+
+Para probar la version desplegada:
+
+```text
+https://autorent-production-d72a.up.railway.app/login.html
 ```
 
 ## Usuarios de prueba
@@ -125,7 +153,7 @@ Todos usan la password:
 - Reservas con aprobacion del propietario.
 - Pagos con efectivo, tarjeta o Mercado Pago.
 - Reviews sobre autos alquilados.
-- Paneles simples para cliente, propietario y administrador.
+- Vistas para cliente, propietario y administrador.
 
 ## Mercado Pago
 
@@ -138,12 +166,32 @@ APP_BASE_URL
 
 El sistema crea una preferencia de pago y redirige al checkout de Mercado Pago. Cuando el pago se confirma, se actualiza el estado del pago en AutoRent.
 
+## Deploy
+
+El deploy se realiza desde GitHub hacia Railway. Railway toma la rama `main`, compila el proyecto Spring Boot y publica la aplicacion con una URL publica.
+
+La configuracion de produccion esta en:
+
+```text
+AutoRent/src/main/resources/application-prod.properties
+```
+
+Si se hacen cambios en el codigo, se suben a GitHub y Railway vuelve a desplegar automaticamente.
+
+Si se cambian datos ya cargados en la base online, se actualizan desde MySQL Workbench conectado al MySQL de Railway.
+
 ## Swagger
 
 La documentacion de la API se puede ver en:
 
 ```text
 http://localhost:8080/swagger-ui.html
+```
+
+En Railway:
+
+```text
+https://autorent-production-d72a.up.railway.app/swagger-ui.html
 ```
 
 Para probar endpoints protegidos desde Swagger:
