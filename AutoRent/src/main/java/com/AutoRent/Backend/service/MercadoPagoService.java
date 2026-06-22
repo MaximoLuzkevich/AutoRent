@@ -2,97 +2,115 @@ package com.AutoRent.Backend.service;
 
 import com.AutoRent.Backend.exception.ParametroIncorrectoException;
 import com.AutoRent.Backend.model.Pago;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import com.mercadopago.MercadoPagoConfig;
+import com.mercadopago.client.payment.PaymentClient;
+import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
+import com.mercadopago.client.preference.PreferenceClient;
+import com.mercadopago.client.preference.PreferenceItemRequest;
+import com.mercadopago.client.preference.PreferencePayerRequest;
+import com.mercadopago.client.preference.PreferenceRequest;
+import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.exceptions.MPException;
+import com.mercadopago.resources.payment.Payment;
+import com.mercadopago.resources.preference.Preference;
 import java.util.List;
-import java.util.Map;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 
 @Service
 public class MercadoPagoService {
 
     private final String accessToken;
-    private final RestClient restClient;
+    private final String appBaseUrl;
 
-    public MercadoPagoService(@Value("${mercadopago.access-token:}") String accessToken) {
+    public MercadoPagoService(
+            @Value("${mercadopago.access-token:}") String accessToken,
+            @Value("${app.base-url:http://localhost:8080}") String appBaseUrl
+    ) {
         this.accessToken = accessToken;
-        this.restClient = RestClient.builder()
-                .baseUrl("https://api.mercadopago.com")
-                .build();
+        this.appBaseUrl = appBaseUrl;
     }
 
     public String crearPreferencia(Pago pago) {
-        if (accessToken == null || accessToken.isBlank()) {
-            throw new ParametroIncorrectoException("Falta configurar MERCADOPAGO_ACCESS_TOKEN");
-        }
+        validarConfiguracion();
+        MercadoPagoConfig.setAccessToken(accessToken);
 
         try {
-            Map<String, Object> respuesta = restClient.post()
-                    .uri("/checkout/preferences")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(crearRequestPreferencia(pago))
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<Map<String, Object>>() {
-                    });
+            PreferenceItemRequest item = PreferenceItemRequest.builder()
+                    .title("Reserva AutoRent #" + pago.getReserva().getIdReserva())
+                    .description(pago.getReserva().getAuto().getMarca()
+                            + " " + pago.getReserva().getAuto().getModelo())
+                    .quantity(1)
+                    .currencyId("ARS")
+                    .unitPrice(pago.getMonto())
+                    .build();
 
-            return obtenerLinkPago(respuesta);
-        } catch (RestClientException e) {
+            PreferenceRequest request = PreferenceRequest.builder()
+                    .items(List.of(item))
+                    .payer(PreferencePayerRequest.builder()
+                            .email(pago.getReserva().getCliente().getEmail())
+                            .build())
+                    .externalReference(String.valueOf(pago.getIdPago()))
+                    .notificationUrl(url("/api/pagos/mercadopago/webhook"))
+                    .backUrls(PreferenceBackUrlsRequest.builder()
+                            .success(url("/pago-resultado.html?estado=aprobado"))
+                            .pending(url("/pago-resultado.html?estado=pendiente"))
+                            .failure(url("/pago-resultado.html?estado=rechazado"))
+                            .build())
+                    .build();
+
+            Preference preference = new PreferenceClient().create(request);
+            return obtenerLinkPago(preference);
+        } catch (MPException | MPApiException e) {
             throw new ParametroIncorrectoException("No se pudo crear la preferencia de Mercado Pago");
         }
     }
 
-    private Map<String, Object> crearRequestPreferencia(Pago pago) {
-        Map<String, Object> item = new LinkedHashMap<>();
-        item.put("title", "Reserva AutoRent #" + pago.getReserva().getIdReserva());
-        item.put("quantity", 1);
-        item.put("currency_id", "ARS");
-        item.put("unit_price", pago.getMonto());
+    public Payment obtenerPago(Long idPagoMercadoPago) {
+        validarConfiguracion();
+        MercadoPagoConfig.setAccessToken(accessToken);
 
-        Map<String, Object> request = new LinkedHashMap<>();
-        request.put("items", List.of(item));
-        request.put("external_reference", String.valueOf(pago.getIdPago()));
-
-        String emailCliente = pago.getReserva().getCliente().getEmail();
-        if (emailCliente != null && !emailCliente.isBlank()) {
-            request.put("payer", Map.of("email", emailCliente));
+        try {
+            return new PaymentClient().get(idPagoMercadoPago);
+        } catch (MPException | MPApiException e) {
+            throw new ParametroIncorrectoException("No se pudo consultar el pago en Mercado Pago");
         }
-
-        request.put("payment_methods", Map.of(
-                "excluded_payment_types", new ArrayList<>(),
-                "installments", 1
-        ));
-
-        return request;
     }
 
-    private String obtenerLinkPago(Map<String, Object> respuesta) {
-        if (respuesta == null) {
+    private String obtenerLinkPago(Preference preference) {
+        if (preference == null) {
             throw new ParametroIncorrectoException("Mercado Pago no devolvio una respuesta valida");
         }
 
-        Object link = accessToken.startsWith("TEST-")
-                ? respuesta.get("sandbox_init_point")
-                : respuesta.get("init_point");
+        String link = accessToken.startsWith("TEST-")
+                ? preference.getSandboxInitPoint()
+                : preference.getInitPoint();
 
-        if (link == null || link.toString().isBlank()) {
-            link = respuesta.get("init_point");
+        if (link == null || link.isBlank()) {
+            link = preference.getInitPoint();
         }
 
-        if (link == null || link.toString().isBlank()) {
-            link = respuesta.get("sandbox_init_point");
+        if (link == null || link.isBlank()) {
+            link = preference.getSandboxInitPoint();
         }
 
-        if (link == null || link.toString().isBlank()) {
+        if (link == null || link.isBlank()) {
             throw new ParametroIncorrectoException("Mercado Pago no devolvio link de pago");
         }
 
-        return link.toString();
+        return link;
+    }
+
+    private void validarConfiguracion() {
+        if (accessToken == null || accessToken.isBlank()) {
+            throw new ParametroIncorrectoException("Falta configurar MERCADOPAGO_ACCESS_TOKEN");
+        }
+    }
+
+    private String url(String path) {
+        String base = appBaseUrl.endsWith("/")
+                ? appBaseUrl.substring(0, appBaseUrl.length() - 1)
+                : appBaseUrl;
+        return base + path;
     }
 }
