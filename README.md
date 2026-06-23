@@ -10,7 +10,7 @@ El proyecto incluye un backend API REST y un frontend en HTML, CSS, Bootstrap y 
 La aplicacion esta desplegada en Railway:
 
 ```text
-https://autorent-production-d72a.up.railway.app/login.html
+https://autorent-production-d72a.up.railway.app
 ```
 
 El backend y el frontend se sirven desde el mismo proyecto Spring Boot. La base de datos MySQL tambien esta configurada en Railway.
