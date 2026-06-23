@@ -62,7 +62,7 @@ public class UsuarioService {
         }
 
         if (!passwordEncoder.matches(dto.getPassword(), usuario.getPassword())) {
-            throw new LoginRequeridoException("Password incorrecta");
+            throw new LoginRequeridoException("Contrasena incorrecta");
         }
 
         return new AuthRespuestaDto(

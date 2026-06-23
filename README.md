@@ -128,7 +128,7 @@ https://autorent-production-d72a.up.railway.app/login.html
 
 ## Usuarios de prueba
 
-Todos usan la password:
+Todos usan la contrasena:
 
 ```text
 123456
