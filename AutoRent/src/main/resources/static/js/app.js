@@ -495,6 +495,12 @@
             `;
 
             llenarAutoForm(form, auto);
+            const statusButton = $("#toggleOwnerAutoStatus");
+            if (statusButton) {
+                statusButton.dataset.activo = String(auto.activo);
+                statusButton.textContent = auto.activo ? "Dar de baja auto" : "Dar de alta auto";
+                statusButton.className = auto.activo ? "btn btn-outline-danger" : "btn btn-outline-success";
+            }
             renderOwnerImages(id, imagenes);
             renderReviews($("#ownerAutoReviews"), reviews);
             configurarGaleriaDetalle(detalle);
@@ -515,11 +521,17 @@
             }
         });
 
-        $("#deleteOwnerAuto")?.addEventListener("click", async () => {
+        $("#toggleOwnerAutoStatus")?.addEventListener("click", async (event) => {
+            const estaActivo = event.currentTarget.dataset.activo === "true";
             try {
-                await api(`/autos/${id}/me`, { method: "DELETE" });
-                mensaje("Auto dado de baja correctamente.", "success");
-                setTimeout(() => window.location.href = "propietario-autos.html", 900);
+                if (estaActivo) {
+                    await api(`/autos/${id}/me`, { method: "DELETE" });
+                    mensaje("Auto dado de baja correctamente.", "success");
+                } else {
+                    await api(`/autos/${id}/me/activar`, { method: "PUT" });
+                    mensaje("Auto dado de alta correctamente.", "success");
+                }
+                setTimeout(() => window.location.reload(), 700);
             } catch (error) {
                 mensaje(error.message, "danger");
             }
@@ -798,6 +810,7 @@
     }
 
     function pagoCard(pago, modo = "cliente") {
+        const puedeGestionar = modo === "admin" && pago.estado === "PENDIENTE";
         return `
             <article class="list-card">
                 <div>
@@ -807,7 +820,7 @@
                     <small>${formatMoney(pago.monto)}</small>
                     ${pago.linkPago ? `<a href="${escapeHtml(pago.linkPago)}" target="_blank" rel="noreferrer">Abrir Mercado Pago</a>` : ""}
                 </div>
-                ${modo === "admin" ? `
+                ${puedeGestionar ? `
                     <div class="list-actions">
                         <button class="btn btn-success btn-sm" data-aprobar-pago="${pago.idPago}" type="button">Aprobar</button>
                         <button class="btn btn-outline-danger btn-sm" data-rechazar-pago="${pago.idPago}" type="button">Rechazar</button>

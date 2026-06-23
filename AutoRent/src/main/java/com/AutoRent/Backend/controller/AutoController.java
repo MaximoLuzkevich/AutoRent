@@ -168,4 +168,9 @@ public class AutoController {
         autoService.desactivarAutoAutenticado(idAuto);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{idAuto}/me/activar")
+    public ResponseEntity<AutoRespuestaDto> activarMiAuto(@PathVariable Integer idAuto) {
+        return ResponseEntity.ok(autoService.activarAutoAutenticado(idAuto));
+    }
 }

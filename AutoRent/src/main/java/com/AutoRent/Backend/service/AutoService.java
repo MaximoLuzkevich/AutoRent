@@ -242,6 +242,15 @@ public class AutoService {
         autoRepository.save(auto);
     }
 
+    public AutoRespuestaDto activarAutoAutenticado(Integer idAuto) {
+        Auto auto = obtenerAutoPorId(idAuto);
+        Usuario usuario = usuarioService.obtenerUsuarioAutenticado();
+        validarPropietarioOAdministrador(auto, usuario);
+
+        auto.setActivo(true);
+        return convertirARespuesta(autoRepository.save(auto));
+    }
+
     public Auto obtenerAutoPorId(Integer idAuto) {
         return autoRepository.findById(idAuto)
                 .orElseThrow(() -> new IdNoEncontradoException("Auto no encontrado"));
