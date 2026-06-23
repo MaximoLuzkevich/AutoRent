@@ -529,7 +529,49 @@ WHERE cliente.email = 'cliente@test.com'
         AND r.fecha_fin = '2026-09-12'
   );
 
--- Reserva finalizada sin review para mostrar la carga de una opinion.
+-- Reservas finalizadas sin review para mostrar la carga de opiniones.
+INSERT INTO reserva (fecha_inicio, fecha_fin, precio_total, estado, id_cliente, id_auto)
+SELECT '2026-04-01', '2026-04-03', 20000.00, 'FINALIZADA', cliente.id_usuario, auto_publicado.id_auto
+FROM usuario cliente
+JOIN auto auto_publicado ON auto_publicado.patente = 'AB123CD'
+WHERE cliente.email = 'cliente@test.com'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM reserva r
+      WHERE r.id_cliente = cliente.id_usuario
+        AND r.id_auto = auto_publicado.id_auto
+        AND r.fecha_inicio = '2026-04-01'
+        AND r.fecha_fin = '2026-04-03'
+  );
+
+INSERT INTO reserva (fecha_inicio, fecha_fin, precio_total, estado, id_cliente, id_auto)
+SELECT '2026-04-04', '2026-04-06', 27000.00, 'FINALIZADA', cliente.id_usuario, auto_publicado.id_auto
+FROM usuario cliente
+JOIN auto auto_publicado ON auto_publicado.patente = 'AC624TL'
+WHERE cliente.email = 'cliente@test.com'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM reserva r
+      WHERE r.id_cliente = cliente.id_usuario
+        AND r.id_auto = auto_publicado.id_auto
+        AND r.fecha_inicio = '2026-04-04'
+        AND r.fecha_fin = '2026-04-06'
+  );
+
+INSERT INTO reserva (fecha_inicio, fecha_fin, precio_total, estado, id_cliente, id_auto)
+SELECT '2026-04-07', '2026-04-09', 24000.00, 'FINALIZADA', cliente.id_usuario, auto_publicado.id_auto
+FROM usuario cliente
+JOIN auto auto_publicado ON auto_publicado.patente = 'AD321ON'
+WHERE cliente.email = 'cliente@test.com'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM reserva r
+      WHERE r.id_cliente = cliente.id_usuario
+        AND r.id_auto = auto_publicado.id_auto
+        AND r.fecha_inicio = '2026-04-07'
+        AND r.fecha_fin = '2026-04-09'
+  );
+
 INSERT INTO reserva (fecha_inicio, fecha_fin, precio_total, estado, id_cliente, id_auto)
 SELECT '2026-04-10', '2026-04-12', 190000.00, 'FINALIZADA', cliente.id_usuario, auto_publicado.id_auto
 FROM usuario cliente
@@ -593,13 +635,7 @@ WHERE cliente.email = 'cliente@test.com'
         AND p.metodo_pago = 'TARJETA'
   );
 
--- Opiniones cargadas sobre autos que ya tuvieron alquileres.
-INSERT IGNORE INTO review (puntuacion, comentario, id_cliente, id_auto)
-SELECT 5, 'Muy buen auto, limpio y comodo para viajar.', cliente.id_usuario, auto_publicado.id_auto
-FROM usuario cliente
-JOIN auto auto_publicado ON auto_publicado.patente = 'AB123CD'
-WHERE cliente.email = 'cliente@test.com';
-
+-- Opinion cargada sobre un auto que ya tuvo un alquiler.
 INSERT IGNORE INTO review (puntuacion, comentario, id_cliente, id_auto)
 SELECT 4, 'Muy comodo para moverse por la ciudad.', cliente.id_usuario, auto_publicado.id_auto
 FROM usuario cliente
